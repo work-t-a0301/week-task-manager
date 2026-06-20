@@ -60,11 +60,11 @@ export default function WorkScheduleForm({ initialSchedule, onSave }) {
       <div className="work-schedule-form__time">
         <label>
           開始
-          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+          <input type="time" step="600" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
         </label>
         <label>
           終了
-          <input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+          <input type="time" step="600" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
         </label>
       </div>
       <label className="work-schedule-form__break-toggle">
@@ -75,11 +75,11 @@ export default function WorkScheduleForm({ initialSchedule, onSave }) {
         <div className="work-schedule-form__time">
           <label>
             休憩開始
-            <input type="time" value={breakStart} onChange={(event) => setBreakStart(event.target.value)} />
+            <input type="time" step="600" value={breakStart} onChange={(event) => setBreakStart(event.target.value)} />
           </label>
           <label>
             休憩終了
-            <input type="time" value={breakEnd} onChange={(event) => setBreakEnd(event.target.value)} />
+            <input type="time" step="600" value={breakEnd} onChange={(event) => setBreakEnd(event.target.value)} />
           </label>
         </div>
       )}

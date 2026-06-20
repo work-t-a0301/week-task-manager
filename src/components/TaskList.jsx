@@ -161,6 +161,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
               締切
               <input
                 type="datetime-local"
+                step="600"
                 value={deadline}
                 onChange={(event) => setDeadline(event.target.value)}
                 aria-label="締切の日時"
@@ -172,6 +173,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
             作業時間
             <input
               type="time"
+              step="600"
               value={duration}
               onChange={(event) => setDuration(event.target.value)}
               aria-label="作業時間"

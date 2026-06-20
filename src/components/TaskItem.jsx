@@ -45,6 +45,7 @@ export default function TaskItem({
                 <span className="task-item__duration-text">作業時間</span>
                 <input
                   type="time"
+                  step="600"
                   className="task-item__duration-input"
                   value={task.duration}
                   onChange={(event) => onDurationChange(task, event.target.value)}
