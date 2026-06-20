@@ -12,11 +12,20 @@
 
 .app__toolbar button {
   font-size: 13px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
   background: #fff;
+  color: var(--accent);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app__toolbar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);
 }
 
 .app__layout {
@@ -38,7 +47,7 @@
 .app__grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 @media (max-width: 1000px) {

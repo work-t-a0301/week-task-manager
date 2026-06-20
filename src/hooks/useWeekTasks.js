@@ -58,7 +58,8 @@ function weekdayIndexOf(date) {
   return (date.getDay() + 6) % 7
 }
 
-// 指定日にその日働く分(=出現する)タスクを、その日の時間帯・作業時間とともに返す
+// 指定日にその日働く分(=出現する)タスクを、その日の作業時間とともに返す。
+// 毎日タスク・週1タスクは特定の時刻を持たない（time が undefined のまま)
 function tasksOccurringOnDate(date, dateKey, tasks) {
   const weekdayIndex = weekdayIndexOf(date)
   return tasks.flatMap((task) => {
@@ -67,6 +68,22 @@ function tasksOccurringOnDate(date, dateKey, tasks) {
     const segment = (task.segments || []).find((s) => s.date === dateKey)
     return segment ? [{ ...task, time: segment.time, duration: segment.duration }] : []
   })
+}
+
+// 時刻を持つ occurrence（単発タスク）は busy interval、時刻を持たない occurrence
+// （毎日/週1タスク）はその日の枠を単純に圧縮するものとして扱う
+function splitOccurringTasks(occurring) {
+  const busy = []
+  let flatMinutes = 0
+  for (const task of occurring) {
+    if (task.time) {
+      const start = timeToMinutes(task.time)
+      busy.push({ start, end: start + durationToMinutes(task.duration) })
+    } else {
+      flatMinutes += durationToMinutes(task.duration)
+    }
+  }
+  return { busy, flatMinutes }
 }
 
 function findLargestFreeGap(busyIntervals, dayStartMinutes, dayEndMinutes) {
@@ -91,6 +108,34 @@ function formatTimeOfDay(date) {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
+// 進捗率と残りの作業時間から、今日中に終わる見込みかどうかを判定する。
+// 完了済み・残り作業時間0は判定対象外（バッジを出さない）。
+// 過去日でまだ終わっていなければ「遅延」、未来日はまだ時間に余裕がある
+// 前提で「順調」または「前倒し」、当日は終業時刻までの残り時間で判定する。
+function computeStatus(date, dateKey, task, schedule) {
+  const totalMinutes = durationToMinutes(task.duration)
+  const remainingWorkMinutes = totalMinutes * (1 - task.progress / 100)
+  if (task.completed || remainingWorkMinutes <= 0) return null
+
+  const now = new Date()
+  const todayKey = toDateKey(now)
+  let availableMinutes
+
+  if (dateKey > todayKey) {
+    availableMinutes = totalMinutes
+  } else if (dateKey < todayKey) {
+    availableMinutes = 0
+  } else {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    availableMinutes = Math.max(timeToMinutes(schedule.endTime) - nowMinutes, 0)
+  }
+
+  const ratio = (availableMinutes / remainingWorkMinutes) * 100
+  if (ratio < 90) return '遅延'
+  if (ratio > 110) return '前倒し'
+  return '順調'
+}
+
 export function useWeekTasks() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [tasks, setTasks] = useState(() => loadJSON(TASKS_KEY, initialTasks))
@@ -110,10 +155,13 @@ export function useWeekTasks() {
     return Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * DAY_MS))
   }, [weekOffset])
 
-  function occurrencesForDate(date, dateKey) {
+  function occurrencesForDate(date, dateKey, schedule) {
     return tasksOccurringOnDate(date, dateKey, tasks)
-      .map((task) => ({ ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }))
-      .sort((a, b) => a.time.localeCompare(b.time))
+      .map((task) => {
+        const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
+        return { ...occurrence, status: computeStatus(date, dateKey, occurrence, schedule) }
+      })
+      .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
   }
 
   function remainingMinutesForDate(date, dateKey, schedule) {
@@ -127,13 +175,12 @@ export function useWeekTasks() {
     return Math.max(totalWorkMinutes - busyMinutes, 0)
   }
 
-  function addTask({ type, time, title, duration, weekday, deadline }) {
+  function addTask({ type, title, duration, weekday, deadline }) {
     setTasks((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         type,
-        time,
         title,
         duration: duration || DEFAULT_DURATION,
         weekday,
@@ -141,6 +188,19 @@ export function useWeekTasks() {
         segments: type === 'once' ? [] : undefined,
       },
     ])
+  }
+
+  function updateTask(id, fields) {
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== id) return task
+        const updated = { ...task, ...fields }
+        // 作業時間・締切が変わると既存の登録内容と整合しなくなるため、
+        // 単発タスクは編集時にカレンダー登録をリセットして再設定を促す
+        if (task.type === 'once') updated.segments = []
+        return updated
+      }),
+    )
   }
 
   function updateOccurrence(taskId, dateKey, updater) {
@@ -170,7 +230,7 @@ export function useWeekTasks() {
     })
   }
 
-  // 締め切りが設定済みでまだ作業時間を割り切れていないタスクを、働く時間内の
+  // 締切が設定済みでまだ作業時間を割り切れていない単発タスクを、働く時間内の
   // 空き時間（複数日にまたがってもよい）へ自動的に割り当てる
   function scheduleUnplacedTasks(schedule) {
     const candidates = tasks.filter((task) => {
@@ -212,11 +272,9 @@ export function useWeekTasks() {
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
 
-        const busy = tasksOccurringOnDate(cursor, dateKey, working).map((t) => {
-          const start = timeToMinutes(t.time)
-          return { start, end: start + durationToMinutes(t.duration) }
-        })
-        const gap = findLargestFreeGap(busy, dayStart, effectiveDayEnd)
+        const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working))
+        const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes)
+        const gap = findLargestFreeGap(busy, dayStart, shrunkDayEnd)
         if (!gap) continue
 
         const allocated = Math.min(gap.size, remaining)
@@ -249,6 +307,7 @@ export function useWeekTasks() {
     occurrencesForDate,
     remainingMinutesForDate,
     addTask,
+    updateTask,
     toggleCompletion,
     setProgress,
     deleteTask,

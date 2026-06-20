@@ -1,12 +1,14 @@
 :root {
-  --text: #2b2b33;
-  --bg: #f7f7fa;
-  --border: #e0e0e6;
-  --accent: #4a6cf7;
-  --today-bg: #eef2ff;
+  --text: #2d2a45;
+  --bg: #f5f1ff;
+  --border: #e3d9f7;
+  --accent: #7c3aed;
+  --accent-2: #ec4899;
+  --today-bg: #f0e4ff;
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: linear-gradient(135deg, #fdf4ff 0%, #eef2ff 50%, #fff7f0 100%);
+  background-attachment: fixed;
 }
 
 * {
@@ -15,4 +17,15 @@
 
 body {
   margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 700;
+}
+
+button {
+  font-family: inherit;
 }

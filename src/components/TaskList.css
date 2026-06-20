@@ -1,21 +1,23 @@
 .task-list {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 14px;
+  border: none;
+  border-radius: 16px;
   background: #fff;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.08);
   margin-bottom: 16px;
 }
 
 .task-list h2 {
   margin: 0 0 12px;
-  font-size: 16px;
+  font-size: 18px;
+  color: var(--accent);
 }
 
 .task-list__panel {
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fbfbfd;
+  border-radius: 12px;
+  background: #fbfaff;
   margin-bottom: 12px;
 }
 
@@ -44,11 +46,30 @@
 }
 
 .task-list__form button {
-  align-self: flex-start;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
+  font-weight: 600;
   border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
   cursor: pointer;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.task-list__form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(124, 58, 237, 0.4);
+}
+
+.task-list__form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.task-list__form-actions .task-list__cancel {
+  background: #fff;
+  color: var(--text);
 }
 
 .task-list__radio-group {
@@ -91,13 +112,20 @@
 
 .task-list__schedule-button {
   font-size: 13px;
-  padding: 6px 12px;
-  margin-bottom: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
   border: none;
-  border-radius: 6px;
-  background: var(--accent);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
   color: #fff;
   cursor: pointer;
+  box-shadow: 0 3px 8px rgba(236, 72, 153, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.task-list__schedule-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(236, 72, 153, 0.45);
 }
 
 .task-list__schedule-result {
@@ -113,6 +141,34 @@
   flex-shrink: 0;
 }
 
+.task-list__group {
+  margin-bottom: 16px;
+}
+
+.task-list__group:last-child {
+  margin-bottom: 0;
+}
+
+.task-list__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.task-list__group-header h4 {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.task-list__empty {
+  margin: 0;
+  font-size: 12px;
+  color: #9a9aa3;
+}
+
 .task-list__items {
   list-style: none;
   margin: 0;
@@ -126,9 +182,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 13px;
   background: #fff;
 }
@@ -140,15 +196,6 @@
   flex-wrap: wrap;
 }
 
-.task-list__type {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--today-bg);
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
 .task-list__title {
   margin: 0;
   font-size: 14px;
@@ -156,9 +203,20 @@
   word-break: break-word;
 }
 
-.task-list__delete {
+.task-list__edit {
   flex-shrink: 0;
   margin-left: auto;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.task-list__delete {
+  flex-shrink: 0;
   border: none;
   background: none;
   color: #9a9aa3;

@@ -17,6 +17,7 @@ function App() {
     occurrencesForDate,
     remainingMinutesForDate,
     addTask,
+    updateTask,
     toggleCompletion,
     setProgress,
     deleteTask,
@@ -43,9 +44,9 @@ function App() {
         <aside className="app__sidebar">
           <TaskList
             tasks={tasks}
-            defaultTime={schedule.startTime}
             schedule={schedule}
             onAddTask={addTask}
+            onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
             onScheduleToCalendar={scheduleUnplacedTasks}
           />
@@ -61,7 +62,7 @@ function App() {
                 <DayColumn
                   key={dateKey}
                   date={date}
-                  tasks={occurrencesForDate(date, dateKey)}
+                  tasks={occurrencesForDate(date, dateKey, schedule)}
                   isWorkDay={schedule.workDays.includes(weekdayIndex)}
                   remainingMinutes={remainingMinutesForDate(date, dateKey, schedule)}
                   onToggle={toggleCompletion}
