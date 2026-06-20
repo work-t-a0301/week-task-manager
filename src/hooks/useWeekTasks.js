@@ -58,24 +58,33 @@ function weekdayIndexOf(date) {
   return (date.getDay() + 6) % 7
 }
 
+// 指定日にその日働く分(=出現する)タスクを、その日の時間帯・作業時間とともに返す
 function tasksOccurringOnDate(date, dateKey, tasks) {
   const weekdayIndex = weekdayIndexOf(date)
-  return tasks.filter((task) => {
-    if (task.type === 'daily') return true
-    if (task.type === 'weekly') return task.weekday === weekdayIndex
-    return task.date === dateKey
+  return tasks.flatMap((task) => {
+    if (task.type === 'daily') return [task]
+    if (task.type === 'weekly') return task.weekday === weekdayIndex ? [task] : []
+    const segment = (task.segments || []).find((s) => s.date === dateKey)
+    return segment ? [{ ...task, time: segment.time, duration: segment.duration }] : []
   })
 }
 
-function findFreeSlot(busyIntervals, dayStartMinutes, dayEndMinutes, durationMinutes) {
+function findLargestFreeGap(busyIntervals, dayStartMinutes, dayEndMinutes) {
   const sorted = [...busyIntervals].sort((a, b) => a.start - b.start)
   let cursor = dayStartMinutes
+  let best = null
   for (const interval of sorted) {
-    if (interval.start - cursor >= durationMinutes) return cursor
+    const gapSize = interval.start - cursor
+    if (gapSize > 0 && (!best || gapSize > best.size)) {
+      best = { start: cursor, size: gapSize }
+    }
     cursor = Math.max(cursor, interval.end)
   }
-  if (dayEndMinutes - cursor >= durationMinutes) return cursor
-  return null
+  const tailSize = dayEndMinutes - cursor
+  if (tailSize > 0 && (!best || tailSize > best.size)) {
+    best = { start: cursor, size: tailSize }
+  }
+  return best
 }
 
 function formatTimeOfDay(date) {
@@ -107,10 +116,30 @@ export function useWeekTasks() {
       .sort((a, b) => a.time.localeCompare(b.time))
   }
 
-  function addTask({ type, time, title, duration, weekday, date, deadline }) {
+  function remainingMinutesForDate(date, dateKey, schedule) {
+    const weekdayIndex = weekdayIndexOf(date)
+    if (!schedule.workDays.includes(weekdayIndex)) return null
+    const totalWorkMinutes = timeToMinutes(schedule.endTime) - timeToMinutes(schedule.startTime)
+    const busyMinutes = tasksOccurringOnDate(date, dateKey, tasks).reduce(
+      (sum, task) => sum + durationToMinutes(task.duration),
+      0,
+    )
+    return Math.max(totalWorkMinutes - busyMinutes, 0)
+  }
+
+  function addTask({ type, time, title, duration, weekday, deadline }) {
     setTasks((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), type, time, title, duration: duration || DEFAULT_DURATION, weekday, date, deadline },
+      {
+        id: crypto.randomUUID(),
+        type,
+        time,
+        title,
+        duration: duration || DEFAULT_DURATION,
+        weekday,
+        deadline,
+        segments: type === 'once' ? [] : undefined,
+      },
     ])
   }
 
@@ -141,15 +170,23 @@ export function useWeekTasks() {
     })
   }
 
+  // 締め切りが設定済みでまだ作業時間を割り切れていないタスクを、働く時間内の
+  // 空き時間（複数日にまたがってもよい）へ自動的に割り当てる
   function scheduleUnplacedTasks(schedule) {
-    const unplaced = tasks.filter((task) => task.type === 'once' && !task.date && task.deadline)
-    if (unplaced.length === 0) {
-      return { scheduledTitles: [], unscheduledTitles: [] }
+    const candidates = tasks.filter((task) => {
+      if (task.type !== 'once' || !task.deadline) return false
+      const scheduledMinutes = (task.segments || []).reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
+      return scheduledMinutes < durationToMinutes(task.duration)
+    })
+
+    if (candidates.length === 0) {
+      return { scheduledTitles: [], partiallyScheduledTitles: [], unscheduledTitles: [] }
     }
 
-    const sorted = [...unplaced].sort((a, b) => a.deadline.localeCompare(b.deadline))
+    const sorted = [...candidates].sort((a, b) => a.deadline.localeCompare(b.deadline))
     let working = tasks
     const scheduledTitles = []
+    const partiallyScheduledTitles = []
     const unscheduledTitles = []
     const dayStart = timeToMinutes(schedule.startTime)
     const dayEnd = timeToMinutes(schedule.endTime)
@@ -158,14 +195,20 @@ export function useWeekTasks() {
 
     for (const task of sorted) {
       const deadlineDate = new Date(task.deadline)
-      const taskDuration = durationToMinutes(task.duration)
-      let placed = false
+      const existingSegments = task.segments || []
+      let remaining = durationToMinutes(task.duration) - existingSegments.reduce(
+        (sum, s) => sum + durationToMinutes(s.duration),
+        0,
+      )
+      const newSegments = []
 
-      for (const cursor = new Date(todayStart); cursor.getTime() <= deadlineDate.getTime(); cursor.setDate(cursor.getDate() + 1)) {
+      for (const cursor = new Date(todayStart); cursor.getTime() <= deadlineDate.getTime() && remaining > 0; cursor.setDate(cursor.getDate() + 1)) {
         const weekdayIndex = weekdayIndexOf(cursor)
         if (!schedule.workDays.includes(weekdayIndex)) continue
 
         const dateKey = toDateKey(cursor)
+        if (existingSegments.some((s) => s.date === dateKey)) continue
+
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
 
@@ -173,21 +216,28 @@ export function useWeekTasks() {
           const start = timeToMinutes(t.time)
           return { start, end: start + durationToMinutes(t.duration) }
         })
-        const slotStart = findFreeSlot(busy, dayStart, effectiveDayEnd, taskDuration)
+        const gap = findLargestFreeGap(busy, dayStart, effectiveDayEnd)
+        if (!gap) continue
 
-        if (slotStart !== null) {
-          working = working.map((t) => (t.id === task.id ? { ...t, date: dateKey, time: minutesToTime(slotStart) } : t))
-          scheduledTitles.push(task.title)
-          placed = true
-          break
-        }
+        const allocated = Math.min(gap.size, remaining)
+        newSegments.push({ date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) })
+        remaining -= allocated
+        working = working.map((t) =>
+          t.id === task.id ? { ...t, segments: [...existingSegments, ...newSegments] } : t,
+        )
       }
 
-      if (!placed) unscheduledTitles.push(task.title)
+      if (newSegments.length === 0) {
+        unscheduledTitles.push(task.title)
+      } else if (remaining > 0) {
+        partiallyScheduledTitles.push(task.title)
+      } else {
+        scheduledTitles.push(task.title)
+      }
     }
 
     setTasks(working)
-    return { scheduledTitles, unscheduledTitles }
+    return { scheduledTitles, partiallyScheduledTitles, unscheduledTitles }
   }
 
   return {
@@ -197,6 +247,7 @@ export function useWeekTasks() {
     goToToday: () => setWeekOffset(0),
     tasks,
     occurrencesForDate,
+    remainingMinutesForDate,
     addTask,
     toggleCompletion,
     setProgress,

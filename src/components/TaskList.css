@@ -11,14 +11,30 @@
   font-size: 16px;
 }
 
-.task-list__form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+.task-list__panel {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfbfd;
+  margin-bottom: 12px;
 }
 
-.task-list__form select,
+.task-list__panel:last-child {
+  margin-bottom: 0;
+}
+
+.task-list__panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #6b6b76;
+}
+
+.task-list__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .task-list__form input,
 .task-list__form button {
   font-size: 13px;
@@ -28,22 +44,47 @@
 }
 
 .task-list__form button {
+  align-self: flex-start;
   background: var(--accent);
   color: #fff;
   border: none;
   cursor: pointer;
 }
 
-.task-list__duration-label {
+.task-list__radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.task-list__radio-group legend {
+  font-size: 12px;
+  color: #6b6b76;
+  padding: 0;
+  margin-right: 4px;
+}
+
+.task-list__radio {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 13px;
+}
+
+.task-list__field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: #6b6b76;
 }
 
 .task-list__error {
-  margin: 0 0 8px;
+  margin: 8px 0 0;
   font-size: 13px;
   color: #e03131;
 }
@@ -89,6 +130,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
+  background: #fff;
 }
 
 .task-list__item-row {

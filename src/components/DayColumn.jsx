@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import TaskItem from './TaskItem'
 import './DayColumn.css'
 
@@ -13,29 +12,16 @@ function isToday(date) {
   )
 }
 
-export default function DayColumn({
-  date,
-  dateKey,
-  tasks,
-  isWorkDay,
-  defaultTime,
-  onToggle,
-  onProgressChange,
-  onDelete,
-  onAddTask,
-}) {
-  const [time, setTime] = useState(defaultTime)
-  const [duration, setDuration] = useState('01:00')
-  const [title, setTitle] = useState('')
+function formatRemainingTime(remainingMinutes) {
+  if (remainingMinutes === null) return null
+  const hours = Math.floor(remainingMinutes / 60)
+  const minutes = remainingMinutes % 60
+  return `残り ${hours}:${minutes.toString().padStart(2, '0')}`
+}
 
-  function handleSubmit(event) {
-    event.preventDefault()
-    if (title.trim() === '') return
-    onAddTask({ type: 'once', date: dateKey, time, duration, title: title.trim() })
-    setTitle('')
-  }
-
+export default function DayColumn({ date, tasks, isWorkDay, remainingMinutes, onToggle, onProgressChange, onDelete }) {
   const weekdayIndex = (date.getDay() + 6) % 7
+  const remainingLabel = formatRemainingTime(remainingMinutes)
 
   return (
     <div className={`day-column${isToday(date) ? ' day-column--today' : ''}${isWorkDay ? '' : ' day-column--off'}`}>
@@ -43,6 +29,7 @@ export default function DayColumn({
         <span className="day-column__weekday">{WEEKDAY_LABELS[weekdayIndex]}</span>
         <span className="day-column__date">{date.getDate()}</span>
         {!isWorkDay && <span className="day-column__off-badge">休</span>}
+        {remainingLabel && <span className="day-column__remaining">{remainingLabel}</span>}
       </div>
 
       <div className="day-column__body">
@@ -57,24 +44,6 @@ export default function DayColumn({
             />
           ))}
         </ul>
-
-        <form className="day-column__form" onSubmit={handleSubmit}>
-          <input type="time" value={time} onChange={(event) => setTime(event.target.value)} aria-label="時間" />
-          <input
-            type="time"
-            value={duration}
-            onChange={(event) => setDuration(event.target.value)}
-            aria-label="作業時間"
-          />
-          <input
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="タスクを追加"
-            aria-label="タスク名"
-          />
-          <button type="submit">追加</button>
-        </form>
       </div>
     </div>
   )

@@ -15,6 +15,7 @@ function App() {
     goToToday,
     tasks,
     occurrencesForDate,
+    remainingMinutesForDate,
     addTask,
     toggleCompletion,
     setProgress,
@@ -60,14 +61,12 @@ function App() {
                 <DayColumn
                   key={dateKey}
                   date={date}
-                  dateKey={dateKey}
                   tasks={occurrencesForDate(date, dateKey)}
                   isWorkDay={schedule.workDays.includes(weekdayIndex)}
-                  defaultTime={schedule.startTime}
+                  remainingMinutes={remainingMinutesForDate(date, dateKey, schedule)}
                   onToggle={toggleCompletion}
                   onProgressChange={setProgress}
                   onDelete={deleteTask}
-                  onAddTask={addTask}
                 />
               )
             })}
