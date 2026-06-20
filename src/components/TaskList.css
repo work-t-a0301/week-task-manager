@@ -83,12 +83,19 @@
 
 .task-list__item {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
+}
+
+.task-list__item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .task-list__type {
@@ -101,13 +108,15 @@
 }
 
 .task-list__title {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  font-size: 14px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .task-list__delete {
+  flex-shrink: 0;
+  margin-left: auto;
   border: none;
   background: none;
   color: #9a9aa3;

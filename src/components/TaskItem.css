@@ -17,10 +17,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: 8px;
 }
 
-.task-item__label {
+.task-item__checkbox {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -43,13 +43,14 @@
 }
 
 .task-item__title {
+  margin: 0;
   font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .task-item__delete {
+  flex-shrink: 0;
   border: none;
   background: none;
   color: #9a9aa3;

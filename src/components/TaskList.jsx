@@ -110,16 +110,23 @@ export default function TaskList({ tasks, defaultTime, schedule, onAddTask, onDe
       <ul className="task-list__items">
         {tasks.map((task) => (
           <li key={task.id} className="task-list__item">
-            <span className="task-list__type">{TYPE_LABELS[task.type]}</span>
-            {task.type === 'weekly' && <span className="task-list__detail">{WEEKDAY_LABELS[task.weekday]}曜日</span>}
-            {task.type === 'once' && (
-              <span className="task-list__detail">{task.date ? `登録済: ${task.date}` : `締切: ${task.deadline}`}</span>
-            )}
-            <span className="task-list__duration">作業時間 {task.duration}</span>
-            <span className="task-list__title">{task.title}</span>
-            <button type="button" className="task-list__delete" onClick={() => onDeleteTask(task.id)} aria-label="削除">
-              ×
-            </button>
+            <div className="task-list__item-row">
+              <span className="task-list__type">{TYPE_LABELS[task.type]}</span>
+              {task.type === 'weekly' && <span className="task-list__detail">{WEEKDAY_LABELS[task.weekday]}曜日</span>}
+              {task.type === 'once' && (
+                <span className="task-list__detail">{task.date ? `登録済: ${task.date}` : `締切: ${task.deadline}`}</span>
+              )}
+              <span className="task-list__duration">作業時間 {task.duration}</span>
+              <button
+                type="button"
+                className="task-list__delete"
+                onClick={() => onDeleteTask(task.id)}
+                aria-label="削除"
+              >
+                ×
+              </button>
+            </div>
+            <p className="task-list__title">{task.title}</p>
           </li>
         ))}
       </ul>

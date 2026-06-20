@@ -45,35 +45,37 @@ export default function DayColumn({
         {!isWorkDay && <span className="day-column__off-badge">休</span>}
       </div>
 
-      <ul className="day-column__tasks">
-        {tasks.map((task) => (
-          <TaskItem
-            key={`${task.id}:${task.dateKey}`}
-            task={task}
-            onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
-            onProgressChange={(occurrence, progress) => onProgressChange(occurrence.id, occurrence.dateKey, progress)}
-            onDelete={task.type === 'once' ? onDelete : undefined}
-          />
-        ))}
-      </ul>
+      <div className="day-column__body">
+        <ul className="day-column__tasks">
+          {tasks.map((task) => (
+            <TaskItem
+              key={`${task.id}:${task.dateKey}`}
+              task={task}
+              onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
+              onProgressChange={(occurrence, progress) => onProgressChange(occurrence.id, occurrence.dateKey, progress)}
+              onDelete={task.type === 'once' ? onDelete : undefined}
+            />
+          ))}
+        </ul>
 
-      <form className="day-column__form" onSubmit={handleSubmit}>
-        <input type="time" value={time} onChange={(event) => setTime(event.target.value)} aria-label="時間" />
-        <input
-          type="time"
-          value={duration}
-          onChange={(event) => setDuration(event.target.value)}
-          aria-label="作業時間"
-        />
-        <input
-          type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="タスクを追加"
-          aria-label="タスク名"
-        />
-        <button type="submit">追加</button>
-      </form>
+        <form className="day-column__form" onSubmit={handleSubmit}>
+          <input type="time" value={time} onChange={(event) => setTime(event.target.value)} aria-label="時間" />
+          <input
+            type="time"
+            value={duration}
+            onChange={(event) => setDuration(event.target.value)}
+            aria-label="作業時間"
+          />
+          <input
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="タスクを追加"
+            aria-label="タスク名"
+          />
+          <button type="submit">追加</button>
+        </form>
+      </div>
     </div>
   )
 }

@@ -8,11 +8,10 @@ export default function TaskItem({ task, onToggle, onProgressChange, onDelete })
   return (
     <li className={`task-item${task.completed ? ' task-item--completed' : ''}`}>
       <div className="task-item__row">
-        <label className="task-item__label">
+        <label className="task-item__checkbox">
           <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
           {badge && <span className="task-item__badge">{badge}</span>}
           <span className="task-item__time">{task.time}</span>
-          <span className="task-item__title">{task.title}</span>
         </label>
         {onDelete && (
           <button type="button" className="task-item__delete" onClick={() => onDelete(task.id)} aria-label="削除">
@@ -20,6 +19,7 @@ export default function TaskItem({ task, onToggle, onProgressChange, onDelete })
           </button>
         )}
       </div>
+      <p className="task-item__title">{task.title}</p>
       <div className="task-item__progress">
         <input
           type="range"
