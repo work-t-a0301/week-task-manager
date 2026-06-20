@@ -115,4 +115,10 @@ https://github.com/work-t-a0301/week-task-manager.git
 
 ## デプロイ先
 
-https://github.com/work-t-a0301/week-task-manager/
+GitHub Pagesで公開する。
+
+https://work-t-a0301.github.io/week-task-manager/
+
+- `main` ブランチにプッシュすると `.github/workflows/deploy.yml` のGitHub Actionsが自動でビルドし、GitHub Pagesへ公開する。
+- `vite.config.js` の `base` はリポジトリ名のサブパス（`/week-task-manager/`）に設定済み。リポジトリ名を変更した場合はここも合わせて変更する。
+- 初回公開時のみ、GitHubリポジトリの Settings → Pages → Build and deployment → Source を「GitHub Actions」に設定する必要がある（この設定はリポジトリの管理画面からのみ行えるため、CLIからは実行できない）。
