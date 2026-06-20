@@ -14,10 +14,22 @@
   border-color: var(--accent);
 }
 
+.day-column--off {
+  opacity: 0.6;
+}
+
 .day-column__header {
   display: flex;
   align-items: baseline;
   gap: 6px;
+}
+
+.day-column__off-badge {
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #e0e0e6;
+  color: #6b6b76;
 }
 
 .day-column__weekday {

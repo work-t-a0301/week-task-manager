@@ -13,29 +13,37 @@ function isToday(date) {
   )
 }
 
-export default function DayColumn({ date, dateKey, tasks, onToggle, onDelete, onAddTask }) {
-  const [time, setTime] = useState('09:00')
+export default function DayColumn({ date, dateKey, tasks, isWorkDay, defaultTime, onToggle, onDelete, onAddTask }) {
+  const [time, setTime] = useState(defaultTime)
   const [title, setTitle] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
     if (title.trim() === '') return
-    onAddTask(dateKey, time, title.trim())
+    onAddTask({ type: 'once', date: dateKey, time, title: title.trim() })
     setTitle('')
   }
 
   const weekdayIndex = (date.getDay() + 6) % 7
 
   return (
-    <div className={`day-column${isToday(date) ? ' day-column--today' : ''}`}>
+    <div
+      className={`day-column${isToday(date) ? ' day-column--today' : ''}${isWorkDay ? '' : ' day-column--off'}`}
+    >
       <div className="day-column__header">
         <span className="day-column__weekday">{WEEKDAY_LABELS[weekdayIndex]}</span>
         <span className="day-column__date">{date.getDate()}</span>
+        {!isWorkDay && <span className="day-column__off-badge">休</span>}
       </div>
 
       <ul className="day-column__tasks">
         {tasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
+          <TaskItem
+            key={`${task.id}:${task.dateKey}`}
+            task={task}
+            onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
+            onDelete={task.type === 'once' ? onDelete : undefined}
+          />
         ))}
       </ul>
 

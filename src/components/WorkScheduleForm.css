@@ -1,0 +1,57 @@
+.work-schedule-form {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.work-schedule-form h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.work-schedule-form__days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.work-schedule-form__day {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.work-schedule-form__time {
+  display: flex;
+  gap: 16px;
+}
+
+.work-schedule-form__time label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.work-schedule-form__error {
+  margin: 0;
+  font-size: 13px;
+  color: #e03131;
+}
+
+.work-schedule-form button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
