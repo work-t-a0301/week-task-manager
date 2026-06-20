@@ -3,13 +3,17 @@ import './WorkScheduleForm.css'
 
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日']
 
+function timeToMinutes(time) {
+  const [hours, minutes] = (time || '00:00').split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 export default function WorkScheduleForm({ initialSchedule, onSave }) {
   const [workDays, setWorkDays] = useState(initialSchedule.workDays)
   const [startTime, setStartTime] = useState(initialSchedule.startTime)
   const [endTime, setEndTime] = useState(initialSchedule.endTime)
   const [hasBreak, setHasBreak] = useState(true)
-  const [breakStart, setBreakStart] = useState(initialSchedule.breakStart || '12:00')
-  const [breakEnd, setBreakEnd] = useState(initialSchedule.breakEnd || '13:00')
+  const [breakDuration, setBreakDuration] = useState(initialSchedule.breakDuration || '01:00')
   const [error, setError] = useState('')
 
   function toggleDay(index) {
@@ -26,23 +30,16 @@ export default function WorkScheduleForm({ initialSchedule, onSave }) {
       setError('開始時間は終了時間より前にしてください')
       return
     }
-    if (hasBreak) {
-      if (breakStart >= breakEnd) {
-        setError('休憩の開始時間は終了時間より前にしてください')
-        return
-      }
-      if (breakStart < startTime || breakEnd > endTime) {
-        setError('休憩時間は働く時間の範囲内にしてください')
-        return
-      }
+    if (hasBreak && timeToMinutes(breakDuration) >= timeToMinutes(endTime) - timeToMinutes(startTime)) {
+      setError('休憩時間は働く時間の範囲内にしてください')
+      return
     }
     setError('')
     onSave({
       workDays,
       startTime,
       endTime,
-      breakStart: hasBreak ? breakStart : null,
-      breakEnd: hasBreak ? breakEnd : null,
+      breakDuration: hasBreak ? breakDuration : null,
     })
   }
 
@@ -74,12 +71,13 @@ export default function WorkScheduleForm({ initialSchedule, onSave }) {
       {hasBreak && (
         <div className="work-schedule-form__time">
           <label>
-            休憩開始
-            <input type="time" step="600" value={breakStart} onChange={(event) => setBreakStart(event.target.value)} />
-          </label>
-          <label>
-            休憩終了
-            <input type="time" step="600" value={breakEnd} onChange={(event) => setBreakEnd(event.target.value)} />
+            休憩時間
+            <input
+              type="time"
+              step="600"
+              value={breakDuration}
+              onChange={(event) => setBreakDuration(event.target.value)}
+            />
           </label>
         </div>
       )}

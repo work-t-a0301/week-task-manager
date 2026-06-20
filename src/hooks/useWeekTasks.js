@@ -103,10 +103,10 @@ function tasksOccurringOnDate(date, dateKey, tasks, schedule) {
   })
 }
 
-// 休憩時間を分単位の区間として返す（未設定の場合はnull）
-function breakIntervalMinutes(schedule) {
-  if (!schedule.breakStart || !schedule.breakEnd) return null
-  return { start: timeToMinutes(schedule.breakStart), end: timeToMinutes(schedule.breakEnd) }
+// 休憩時間は特定の時刻ではなく長さ（分）として扱う。固定の時間帯にしないことで、
+// 1日の空き時間が休憩で2つに分断されず、同じタスクがカレンダー上で分割表示されない
+function breakDurationMinutes(schedule) {
+  return schedule.breakDuration ? durationToMinutes(schedule.breakDuration) : 0
 }
 
 // 時刻を持つ occurrence（単発タスク）は busy interval、時刻を持たない occurrence
@@ -167,12 +167,7 @@ function computeStatus(date, dateKey, task, schedule) {
   } else {
     const nowMinutes = now.getHours() * 60 + now.getMinutes()
     availableMinutes = Math.max(timeToMinutes(schedule.endTime) - nowMinutes, 0)
-    const breakInterval = breakIntervalMinutes(schedule)
-    if (breakInterval) {
-      const overlapStart = Math.max(nowMinutes, breakInterval.start)
-      const overlapEnd = Math.min(timeToMinutes(schedule.endTime), breakInterval.end)
-      availableMinutes -= Math.max(overlapEnd - overlapStart, 0)
-    }
+    availableMinutes = Math.max(availableMinutes - breakDurationMinutes(schedule), 0)
   }
 
   const ratio = (availableMinutes / remainingWorkMinutes) * 100
@@ -244,8 +239,7 @@ export function useWeekTasks() {
     const weekdayIndex = weekdayIndexOf(date)
     if (!schedule.workDays.includes(weekdayIndex)) return null
     const totalWorkMinutes = timeToMinutes(schedule.endTime) - timeToMinutes(schedule.startTime)
-    const breakInterval = breakIntervalMinutes(schedule)
-    const breakMinutes = breakInterval ? breakInterval.end - breakInterval.start : 0
+    const breakMinutes = breakDurationMinutes(schedule)
     const busyMinutes = tasksOccurringOnDate(date, dateKey, tasks, schedule).reduce(
       (sum, task) => sum + durationToMinutes(task.duration),
       0,
@@ -467,7 +461,7 @@ export function useWeekTasks() {
     const overflowTitles = []
     const dayStart = timeToMinutes(schedule.startTime)
     const dayEnd = timeToMinutes(schedule.endTime)
-    const breakInterval = breakIntervalMinutes(schedule)
+    const breakMinutes = breakDurationMinutes(schedule)
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
 
@@ -489,14 +483,15 @@ export function useWeekTasks() {
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
 
-        // 休憩や他タスクで空き時間が複数の枠に分かれている場合でも、その日の空きを
-        // 使い切るまで（既にこのタスクのセグメントがあっても）同じ日に積めるだけ積む
+        // 他タスクで空き時間が複数の枠に分かれている場合でも、その日の空きを
+        // 使い切るまで（既にこのタスクのセグメントがあっても）同じ日に積めるだけ積む。
+        // 休憩は特定の時刻を持たず長さのみなので、日の終わりから差し引くだけで
+        // 空き時間を分断しない（同じタスクが休憩を挟んで分割表示されない）
         while (remaining > 0) {
           const currentSegments = working.find((t) => t.id === task.id).segments || []
           const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working, schedule))
-          const allBusy = breakInterval ? [...busy, breakInterval] : busy
-          const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes)
-          const gap = findLargestFreeGap(allBusy, dayStart, shrunkDayEnd)
+          const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes - breakMinutes)
+          const gap = findLargestFreeGap(busy, dayStart, shrunkDayEnd)
           if (!gap) break
 
           const allocated = Math.min(gap.size, remaining)
@@ -550,8 +545,7 @@ export function useWeekTasks() {
             return { ...t, segments: updatedSegs }
           }
           const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(deadlineDate, deadlineDateKey, working, schedule))
-          const allBusy = breakInterval ? [...busy, breakInterval] : busy
-          const gap = findLargestFreeGap(allBusy, dayStart, Math.max(dayStart, dayEnd - flatMinutes))
+          const gap = findLargestFreeGap(busy, dayStart, Math.max(dayStart, dayEnd - flatMinutes - breakMinutes))
           const time = gap ? minutesToTime(gap.start) : schedule.startTime
           return { ...t, segments: [...segs, { date: deadlineDateKey, time, duration: minutesToTime(remaining) }] }
         })
