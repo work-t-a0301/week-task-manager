@@ -14,14 +14,14 @@
   border-radius: 999px;
   background: #fff;
   color: var(--accent);
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .week-header button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
 }
 
 .week-header__range {
@@ -35,5 +35,5 @@
 .week-header__today {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
 }

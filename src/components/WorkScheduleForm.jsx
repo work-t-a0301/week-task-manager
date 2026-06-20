@@ -7,7 +7,7 @@ export default function WorkScheduleForm({ initialSchedule, onSave }) {
   const [workDays, setWorkDays] = useState(initialSchedule.workDays)
   const [startTime, setStartTime] = useState(initialSchedule.startTime)
   const [endTime, setEndTime] = useState(initialSchedule.endTime)
-  const [hasBreak, setHasBreak] = useState(Boolean(initialSchedule.breakStart))
+  const [hasBreak, setHasBreak] = useState(true)
   const [breakStart, setBreakStart] = useState(initialSchedule.breakStart || '12:00')
   const [breakEnd, setBreakEnd] = useState(initialSchedule.breakEnd || '13:00')
   const [error, setError] = useState('')

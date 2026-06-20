@@ -20,6 +20,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   const [startDate, setStartDate] = useState('')
   const [error, setError] = useState('')
   const [scheduleResult, setScheduleResult] = useState('')
+  const [activeGroup, setActiveGroup] = useState('daily')
 
   function resetForm() {
     setEditingId(null)
@@ -201,19 +202,37 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
 
       <div className="task-list__panel">
         <h3>登録済みタスク</h3>
-        {GROUP_ORDER.map((groupType) => {
-          const groupTasks = tasks.filter((task) => task.type === groupType)
+        <div className="task-list__tabs" role="tablist">
+          {GROUP_ORDER.map((groupType) => {
+            const count = tasks.filter((task) => task.type === groupType).length
+            return (
+              <button
+                key={groupType}
+                type="button"
+                role="tab"
+                aria-selected={activeGroup === groupType}
+                className={`task-list__tab${activeGroup === groupType ? ' task-list__tab--active' : ''}`}
+                onClick={() => setActiveGroup(groupType)}
+              >
+                {TYPE_LABELS[groupType]}
+                <span className="task-list__tab-count">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {(() => {
+          const groupTasks = tasks.filter((task) => task.type === activeGroup)
           return (
-            <div key={groupType} className="task-list__group">
-              <div className="task-list__group-header">
-                <h4>{TYPE_LABELS[groupType]}</h4>
-                {groupType === 'once' && (
+            <div className="task-list__group">
+              {activeGroup === 'once' && (
+                <div className="task-list__group-header">
                   <button type="button" className="task-list__schedule-button" onClick={handleScheduleClick}>
                     カレンダーに自動設定
                   </button>
-                )}
-              </div>
-              {groupType === 'once' && scheduleResult && (
+                </div>
+              )}
+              {activeGroup === 'once' && scheduleResult && (
                 <p className="task-list__schedule-result">{scheduleResult}</p>
               )}
               {groupTasks.length === 0 ? (
@@ -269,7 +288,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
               )}
             </div>
           )
-        })}
+        })()}
       </div>
     </section>
   )

@@ -1,13 +1,13 @@
 :root {
-  --text: #2d2a45;
-  --bg: #f5f1ff;
-  --border: #e3d9f7;
-  --accent: #7c3aed;
-  --accent-2: #ec4899;
-  --today-bg: #f0e4ff;
+  --text: #25344a;
+  --bg: #eff6ff;
+  --border: #cfe3f7;
+  --accent: #2563eb;
+  --accent-2: #38bdf8;
+  --today-bg: #e0f2fe;
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
-  background: linear-gradient(135deg, #fdf4ff 0%, #eef2ff 50%, #fff7f0 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 50%, #f0f9ff 100%);
   background-attachment: fixed;
 }
 
