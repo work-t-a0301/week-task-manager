@@ -31,10 +31,51 @@
   color: #6b6b76;
 }
 
+.task-list__panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-list__panel-header .task-list__panel-label {
+  margin: 0;
+  font-size: 13px;
+  color: #6b6b76;
+}
+
+.task-list__toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.task-list__toggle-button:hover {
+  background: var(--today-bg);
+}
+
+.task-list__editing-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 .task-list__form {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin-top: 6px;
 }
 
 .task-list__form input,

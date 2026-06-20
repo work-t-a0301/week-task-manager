@@ -37,6 +37,20 @@ function dateFromKey(dateKey) {
   return new Date(year, month - 1, day)
 }
 
+// 日付の表示はすべて年を省略し、月/日のみにする
+export function formatMonthDay(dateKey) {
+  const [, month, day] = dateKey.split('-')
+  return `${Number(month)}/${Number(day)}`
+}
+
+// 締切（datetime-local由来の "YYYY-MM-DDTHH:MM"）も年を省略して表示する
+export function formatDeadlineLabel(deadline) {
+  if (!deadline) return '未設定'
+  const [datePart, timePart] = deadline.split('T')
+  const monthDay = formatMonthDay(datePart)
+  return timePart ? `${monthDay} ${timePart}` : monthDay
+}
+
 function timeToMinutes(time) {
   const [hours, minutes] = (time || '00:00').split(':').map(Number)
   return hours * 60 + minutes

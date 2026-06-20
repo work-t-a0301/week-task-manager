@@ -170,11 +170,20 @@
   flex-shrink: 0;
 }
 
+.task-item__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .task-item__title {
   margin: 0;
   font-size: 14px;
   white-space: normal;
   word-break: break-word;
+  flex: 1;
+  min-width: 60px;
 }
 
 .task-item__delete {
@@ -219,10 +228,13 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex: 0 0 150px;
+  min-width: 130px;
 }
 
 .task-item__progress-slider {
   flex: 1;
+  width: 50px;
   height: 6px;
   border-radius: 3px;
   appearance: none;

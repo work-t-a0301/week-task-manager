@@ -35,13 +35,12 @@
 }
 
 .app__sidebar {
-  flex: 1 1 380px;
-  min-width: 320px;
+  flex: 0 0 330px;
+  min-width: 300px;
 }
 
 .app__calendar {
-  flex: 1 1 620px;
-  max-width: 620px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 

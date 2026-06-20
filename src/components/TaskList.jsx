@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatMonthDay, formatDeadlineLabel } from '../hooks/useWeekTasks'
 import './TaskList.css'
 
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日']
@@ -21,6 +22,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   const [error, setError] = useState('')
   const [scheduleResult, setScheduleResult] = useState('')
   const [activeGroup, setActiveGroup] = useState('daily')
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   function resetForm() {
     setEditingId(null)
@@ -42,6 +44,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     setDeadline(task.deadline ?? '')
     setStartDate(task.startDate ?? '')
     setError('')
+    setIsFormOpen(true)
   }
 
   function handleTypeChange(nextType) {
@@ -82,6 +85,11 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     resetForm()
   }
 
+  function handleToggleForm() {
+    if (isFormOpen) resetForm()
+    setIsFormOpen((open) => !open)
+  }
+
   function handleScheduleClick() {
     const result = onScheduleToCalendar(schedule)
     const { scheduledTitles, overflowTitles } = result
@@ -102,7 +110,21 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
       <h2>タスク一覧</h2>
 
       <div className="task-list__panel">
-        <h3>{editingId ? 'タスクを編集' : 'タスクを登録'}</h3>
+        <div className="task-list__panel-header">
+          <h3 className="task-list__panel-label">タスク登録</h3>
+          <button
+            type="button"
+            className="task-list__toggle-button"
+            onClick={handleToggleForm}
+            aria-label={isFormOpen ? 'タスク登録を閉じる' : 'タスク登録を開く'}
+            aria-expanded={isFormOpen}
+          >
+            {isFormOpen ? '−' : '+'}
+          </button>
+        </div>
+        {isFormOpen && (
+        <>
+        {editingId && <p className="task-list__editing-note">タスクを編集中</p>}
         <form className="task-list__form" onSubmit={handleSubmit}>
           <fieldset className="task-list__radio-group">
             <legend>種別</legend>
@@ -189,13 +211,22 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
           <div className="task-list__form-actions">
             <button type="submit">{editingId ? '更新' : '追加'}</button>
             {editingId && (
-              <button type="button" className="task-list__cancel" onClick={resetForm}>
+              <button
+                type="button"
+                className="task-list__cancel"
+                onClick={() => {
+                  resetForm()
+                  setIsFormOpen(false)
+                }}
+              >
                 キャンセル
               </button>
             )}
           </div>
         </form>
         {error && <p className="task-list__error">{error}</p>}
+        </>
+        )}
       </div>
 
       <div className="task-list__panel">
@@ -267,11 +298,11 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                         <div className="task-list__meta">
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">開始日</span>
-                            {task.startDate || '指定なし'}
+                            {task.startDate ? formatMonthDay(task.startDate) : '指定なし'}
                           </span>
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">締切</span>
-                            {formatDeadline(task.deadline)}
+                            {formatDeadlineLabel(task.deadline)}
                           </span>
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">登録状況</span>
@@ -292,15 +323,9 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   )
 }
 
-function formatDeadline(deadline) {
-  if (!deadline) return '未設定'
-  const [datePart, timePart] = deadline.split('T')
-  return timePart ? `${datePart} ${timePart}` : datePart
-}
-
 function describeScheduleStatus(task) {
   const segments = task.segments || []
   if (segments.length === 0) return '未登録'
-  const dates = segments.map((s) => s.date).join(' / ')
+  const dates = segments.map((s) => formatMonthDay(s.date)).join(' / ')
   return segments.length > 1 ? `${dates}（${segments.length}日に分割）` : dates
 }
