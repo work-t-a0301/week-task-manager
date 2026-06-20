@@ -1,5 +1,5 @@
 .app {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 16px;
 }
@@ -19,10 +19,36 @@
   cursor: pointer;
 }
 
+.app__layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.app__sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.app__calendar {
+  flex: 1;
+  min-width: 0;
+}
+
 .app__grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
+}
+
+@media (max-width: 1000px) {
+  .app__layout {
+    flex-direction: column;
+  }
+
+  .app__sidebar {
+    width: 100%;
+  }
 }
 
 @media (max-width: 800px) {

@@ -34,10 +34,42 @@
   cursor: pointer;
 }
 
+.task-list__duration-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b6b76;
+}
+
 .task-list__error {
   margin: 0 0 8px;
   font-size: 13px;
   color: #e03131;
+}
+
+.task-list__schedule-button {
+  font-size: 13px;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.task-list__schedule-result {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #2b6e2b;
+}
+
+.task-list__detail,
+.task-list__duration {
+  font-size: 12px;
+  color: #6b6b76;
+  flex-shrink: 0;
 }
 
 .task-list__items {

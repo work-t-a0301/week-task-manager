@@ -17,7 +17,9 @@ function App() {
     occurrencesForDate,
     addTask,
     toggleCompletion,
+    setProgress,
     deleteTask,
+    scheduleUnplacedTasks,
   } = useWeekTasks()
 
   if (isEditing) {
@@ -36,28 +38,42 @@ function App() {
         </button>
       </div>
 
-      <TaskList tasks={tasks} defaultTime={schedule.startTime} onAddTask={addTask} onDeleteTask={deleteTask} />
+      <div className="app__layout">
+        <aside className="app__sidebar">
+          <TaskList
+            tasks={tasks}
+            defaultTime={schedule.startTime}
+            schedule={schedule}
+            onAddTask={addTask}
+            onDeleteTask={deleteTask}
+            onScheduleToCalendar={scheduleUnplacedTasks}
+          />
+        </aside>
 
-      <WeekHeader weekDates={weekDates} onPrevWeek={goToPrevWeek} onNextWeek={goToNextWeek} onToday={goToToday} />
-      <main className="app__grid">
-        {weekDates.map((date) => {
-          const dateKey = toDateKey(date)
-          const weekdayIndex = (date.getDay() + 6) % 7
-          return (
-            <DayColumn
-              key={dateKey}
-              date={date}
-              dateKey={dateKey}
-              tasks={occurrencesForDate(date, dateKey)}
-              isWorkDay={schedule.workDays.includes(weekdayIndex)}
-              defaultTime={schedule.startTime}
-              onToggle={toggleCompletion}
-              onDelete={deleteTask}
-              onAddTask={addTask}
-            />
-          )
-        })}
-      </main>
+        <div className="app__calendar">
+          <WeekHeader weekDates={weekDates} onPrevWeek={goToPrevWeek} onNextWeek={goToNextWeek} onToday={goToToday} />
+          <main className="app__grid">
+            {weekDates.map((date) => {
+              const dateKey = toDateKey(date)
+              const weekdayIndex = (date.getDay() + 6) % 7
+              return (
+                <DayColumn
+                  key={dateKey}
+                  date={date}
+                  dateKey={dateKey}
+                  tasks={occurrencesForDate(date, dateKey)}
+                  isWorkDay={schedule.workDays.includes(weekdayIndex)}
+                  defaultTime={schedule.startTime}
+                  onToggle={toggleCompletion}
+                  onProgressChange={setProgress}
+                  onDelete={deleteTask}
+                  onAddTask={addTask}
+                />
+              )
+            })}
+          </main>
+        </div>
+      </div>
     </div>
   )
 }

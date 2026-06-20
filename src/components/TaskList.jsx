@@ -4,13 +4,15 @@ import './TaskList.css'
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日']
 const TYPE_LABELS = { daily: '毎日の作業', weekly: '1週間に1回の作業', once: '1回だけの作業' }
 
-export default function TaskList({ tasks, defaultTime, onAddTask, onDeleteTask }) {
+export default function TaskList({ tasks, defaultTime, schedule, onAddTask, onDeleteTask, onScheduleToCalendar }) {
   const [type, setType] = useState('daily')
   const [time, setTime] = useState(defaultTime)
+  const [duration, setDuration] = useState('01:00')
   const [title, setTitle] = useState('')
   const [weekday, setWeekday] = useState(0)
-  const [date, setDate] = useState('')
+  const [deadline, setDeadline] = useState('')
   const [error, setError] = useState('')
+  const [scheduleResult, setScheduleResult] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -18,19 +20,34 @@ export default function TaskList({ tasks, defaultTime, onAddTask, onDeleteTask }
       setError('タスク名を入力してください')
       return
     }
-    if (type === 'once' && !date) {
-      setError('日付を選択してください')
+    if (type === 'once' && !deadline) {
+      setError('締め切りの日時を選択してください')
       return
     }
     setError('')
     onAddTask({
       type,
-      time,
+      time: type === 'once' ? undefined : time,
+      duration,
       title: title.trim(),
       weekday: type === 'weekly' ? weekday : undefined,
-      date: type === 'once' ? date : undefined,
+      deadline: type === 'once' ? deadline : undefined,
     })
     setTitle('')
+  }
+
+  function handleScheduleClick() {
+    const result = onScheduleToCalendar(schedule)
+    if (result.scheduledTitles.length === 0 && result.unscheduledTitles.length === 0) {
+      setScheduleResult('カレンダーに登録待ちのタスクはありません')
+      return
+    }
+    const parts = []
+    if (result.scheduledTitles.length > 0) parts.push(`${result.scheduledTitles.length}件をカレンダーに登録しました`)
+    if (result.unscheduledTitles.length > 0) {
+      parts.push(`${result.unscheduledTitles.length}件は締め切りまでに空き時間が見つかりませんでした`)
+    }
+    setScheduleResult(parts.join(' / '))
   }
 
   return (
@@ -53,11 +70,27 @@ export default function TaskList({ tasks, defaultTime, onAddTask, onDeleteTask }
           </select>
         )}
 
-        {type === 'once' && (
-          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} aria-label="日付" />
+        {type === 'once' ? (
+          <input
+            type="datetime-local"
+            value={deadline}
+            onChange={(event) => setDeadline(event.target.value)}
+            aria-label="締め切りの日時"
+          />
+        ) : (
+          <input type="time" value={time} onChange={(event) => setTime(event.target.value)} aria-label="時間" />
         )}
 
-        <input type="time" value={time} onChange={(event) => setTime(event.target.value)} aria-label="時間" />
+        <label className="task-list__duration-label">
+          作業時間
+          <input
+            type="time"
+            value={duration}
+            onChange={(event) => setDuration(event.target.value)}
+            aria-label="作業時間"
+          />
+        </label>
+
         <input
           type="text"
           value={title}
@@ -69,13 +102,20 @@ export default function TaskList({ tasks, defaultTime, onAddTask, onDeleteTask }
       </form>
       {error && <p className="task-list__error">{error}</p>}
 
+      <button type="button" className="task-list__schedule-button" onClick={handleScheduleClick}>
+        カレンダーに設定
+      </button>
+      {scheduleResult && <p className="task-list__schedule-result">{scheduleResult}</p>}
+
       <ul className="task-list__items">
         {tasks.map((task) => (
           <li key={task.id} className="task-list__item">
             <span className="task-list__type">{TYPE_LABELS[task.type]}</span>
             {task.type === 'weekly' && <span className="task-list__detail">{WEEKDAY_LABELS[task.weekday]}曜日</span>}
-            {task.type === 'once' && <span className="task-list__detail">{task.date}</span>}
-            <span className="task-list__time">{task.time}</span>
+            {task.type === 'once' && (
+              <span className="task-list__detail">{task.date ? `登録済: ${task.date}` : `締切: ${task.deadline}`}</span>
+            )}
+            <span className="task-list__duration">作業時間 {task.duration}</span>
             <span className="task-list__title">{task.title}</span>
             <button type="button" className="task-list__delete" onClick={() => onDeleteTask(task.id)} aria-label="削除">
               ×

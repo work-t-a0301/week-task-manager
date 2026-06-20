@@ -1,7 +1,6 @@
 .task-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 4px;
   padding: 6px 8px;
   border-radius: 6px;
@@ -12,6 +11,13 @@
 .task-item--completed .task-item__title {
   color: #9a9aa3;
   text-decoration: line-through;
+}
+
+.task-item__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .task-item__label {
@@ -54,4 +60,43 @@
 
 .task-item__delete:hover {
   color: #e03131;
+}
+
+.task-item__progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-item__progress-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.task-item__progress-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.task-item__progress-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.task-item__progress-label {
+  font-size: 11px;
+  color: #6b6b76;
+  min-width: 32px;
+  text-align: right;
 }
