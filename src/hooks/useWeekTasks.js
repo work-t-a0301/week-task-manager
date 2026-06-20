@@ -505,20 +505,30 @@ export function useWeekTasks() {
           working = working.map((t) => (t.id === task.id ? { ...t, segments: [...currentSegments, newSegment] } : t))
         }
 
-        // 空き枠が複数に分かれていて同じ日に複数セグメントができた場合は、
-        // 同じ日の出現が複数に分割表示されないよう1つのセグメントにまとめる
-        const segmentsForDay = working.find((t) => t.id === task.id).segments.filter((s) => s.date === dateKey)
+        // 同じ日に複数セグメントができた場合、間に空き時間がなく実際に連続している
+        // ものだけを1つにまとめる。休憩などで間に空きがあるものを合算すると、本来
+        // 使われていない時間を空きと誤認識してしまうため、まとめずに残す
+        const segmentsForDay = working
+          .find((t) => t.id === task.id)
+          .segments.filter((s) => s.date === dateKey)
+          .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
         if (segmentsForDay.length > 1) {
-          const earliestTime = segmentsForDay.reduce(
-            (earliest, s) => (timeToMinutes(s.time) < timeToMinutes(earliest) ? s.time : earliest),
-            segmentsForDay[0].time,
-          )
-          const totalDayMinutes = segmentsForDay.reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
-          working = working.map((t) => {
-            if (t.id !== task.id) return t
-            const others = t.segments.filter((s) => s.date !== dateKey)
-            return { ...t, segments: [...others, { date: dateKey, time: earliestTime, duration: minutesToTime(totalDayMinutes) }] }
-          })
+          const mergedSegments = []
+          for (const segment of segmentsForDay) {
+            const last = mergedSegments[mergedSegments.length - 1]
+            if (last && timeToMinutes(last.time) + durationToMinutes(last.duration) === timeToMinutes(segment.time)) {
+              last.duration = minutesToTime(durationToMinutes(last.duration) + durationToMinutes(segment.duration))
+            } else {
+              mergedSegments.push({ ...segment })
+            }
+          }
+          if (mergedSegments.length < segmentsForDay.length) {
+            working = working.map((t) => {
+              if (t.id !== task.id) return t
+              const others = t.segments.filter((s) => s.date !== dateKey)
+              return { ...t, segments: [...others, ...mergedSegments] }
+            })
+          }
         }
       }
 
