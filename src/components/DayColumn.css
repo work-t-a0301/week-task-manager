@@ -18,6 +18,14 @@
 
 .day-column--off {
   opacity: 0.6;
+  padding: 4px 8px;
+}
+
+.day-column--off .day-column__header {
+  flex-direction: row;
+  width: auto;
+  gap: 5px;
+  padding-top: 0;
 }
 
 .day-column--drag-over {

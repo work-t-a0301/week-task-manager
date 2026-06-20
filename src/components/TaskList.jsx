@@ -224,25 +224,42 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                         {task.type === 'weekly' && (
                           <span className="task-list__detail">{WEEKDAY_LABELS[task.weekday]}曜日</span>
                         )}
-                        {task.type === 'once' && <span className="task-list__detail">{describeOnceSchedule(task)}</span>}
                         <span className="task-list__duration">作業時間 {task.duration}</span>
-                        <button
-                          type="button"
-                          className="task-list__edit"
-                          onClick={() => handleEditClick(task)}
-                          aria-label="編集"
-                        >
-                          編集
-                        </button>
-                        <button
-                          type="button"
-                          className="task-list__delete"
-                          onClick={() => onDeleteTask(task.id)}
-                          aria-label="削除"
-                        >
-                          ×
-                        </button>
+                        <div className="task-list__item-actions">
+                          <button
+                            type="button"
+                            className="task-list__edit"
+                            onClick={() => handleEditClick(task)}
+                            aria-label="編集"
+                          >
+                            編集
+                          </button>
+                          <button
+                            type="button"
+                            className="task-list__delete"
+                            onClick={() => onDeleteTask(task.id)}
+                            aria-label="削除"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
+                      {task.type === 'once' && (
+                        <div className="task-list__meta">
+                          <span className="task-list__meta-chip">
+                            <span className="task-list__meta-label">開始日</span>
+                            {task.startDate || '指定なし'}
+                          </span>
+                          <span className="task-list__meta-chip">
+                            <span className="task-list__meta-label">締切</span>
+                            {formatDeadline(task.deadline)}
+                          </span>
+                          <span className="task-list__meta-chip">
+                            <span className="task-list__meta-label">登録状況</span>
+                            {describeScheduleStatus(task)}
+                          </span>
+                        </div>
+                      )}
                       <p className="task-list__title">{task.title}</p>
                     </li>
                   ))}
@@ -256,10 +273,15 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   )
 }
 
-function describeOnceSchedule(task) {
+function formatDeadline(deadline) {
+  if (!deadline) return '未設定'
+  const [datePart, timePart] = deadline.split('T')
+  return timePart ? `${datePart} ${timePart}` : datePart
+}
+
+function describeScheduleStatus(task) {
   const segments = task.segments || []
-  const startLabel = task.startDate ? ` / 開始日: ${task.startDate}` : ''
-  if (segments.length === 0) return `締切: ${task.deadline}${startLabel}`
+  if (segments.length === 0) return '未登録'
   const dates = segments.map((s) => s.date).join(' / ')
-  return segments.length > 1 ? `登録済: ${dates}（${segments.length}日に分割）${startLabel}` : `登録済: ${dates}${startLabel}`
+  return segments.length > 1 ? `${dates}（${segments.length}日に分割）` : dates
 }

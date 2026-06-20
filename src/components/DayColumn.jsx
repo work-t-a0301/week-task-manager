@@ -83,30 +83,32 @@ export default function DayColumn({
         )}
       </div>
 
-      <div className="day-column__body">
-        <ul className="day-column__tasks">
-          {tasks.map((task) => (
-            <TaskItem
-              key={`${task.id}:${task.dateKey}:${task.time || ''}`}
-              task={task}
-              draggable={task.type === 'weekly' || task.type === 'once'}
-              onDragStart={handleDragStart}
-              onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
-              onProgressChange={(occurrence, progress) => onProgressChange(occurrence.id, occurrence.dateKey, progress)}
-              onDurationChange={(occurrence, duration) =>
-                onDurationChange(occurrence.id, occurrence.dateKey, occurrence.time, duration)
-              }
-              onDelete={task.type === 'once' ? onDelete : undefined}
-              onSplit={task.type === 'once' ? (occurrence) => onSplit(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
-              onMerge={
-                task.type === 'once' && task.segmentTotal > 1
-                  ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time)
-                  : undefined
-              }
-            />
-          ))}
-        </ul>
-      </div>
+      {(isWorkDay || tasks.length > 0) && (
+        <div className="day-column__body">
+          <ul className="day-column__tasks">
+            {tasks.map((task) => (
+              <TaskItem
+                key={`${task.id}:${task.dateKey}:${task.time || ''}`}
+                task={task}
+                draggable={task.type === 'weekly' || task.type === 'once'}
+                onDragStart={handleDragStart}
+                onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
+                onProgressChange={(occurrence, progress) => onProgressChange(occurrence.id, occurrence.dateKey, progress)}
+                onDurationChange={(occurrence, duration) =>
+                  onDurationChange(occurrence.id, occurrence.dateKey, occurrence.time, duration)
+                }
+                onDelete={task.type === 'once' ? onDelete : undefined}
+                onSplit={task.type === 'once' ? (occurrence) => onSplit(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
+                onMerge={
+                  task.type === 'once' && task.segmentTotal > 1
+                    ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time)
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

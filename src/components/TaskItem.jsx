@@ -3,6 +3,11 @@ import './TaskItem.css'
 const RECURRENCE_BADGES = { daily: '毎日', weekly: '週1' }
 const STATUS_MODIFIERS = { 順調: 'ontrack', 遅延: 'late', 前倒し: 'ahead' }
 
+function formatDeadline(deadline) {
+  const [datePart, timePart] = deadline.split('T')
+  return timePart ? `${datePart} ${timePart}` : datePart
+}
+
 export default function TaskItem({
   task,
   draggable,
@@ -36,13 +41,16 @@ export default function TaskItem({
             {badge && <span className="task-item__badge">{badge}</span>}
             {task.time && <span className="task-item__time">{task.time}</span>}
             {task.type === 'once' ? (
-              <input
-                type="time"
-                className="task-item__duration-input"
-                value={task.duration}
-                onChange={(event) => onDurationChange(task, event.target.value)}
-                aria-label="この日の作業時間"
-              />
+              <span className="task-item__duration-wrap">
+                <span className="task-item__duration-text">作業時間</span>
+                <input
+                  type="time"
+                  className="task-item__duration-input"
+                  value={task.duration}
+                  onChange={(event) => onDurationChange(task, event.target.value)}
+                  aria-label="この日の作業時間"
+                />
+              </span>
             ) : (
               <span className="task-item__duration">作業時間 {task.duration}</span>
             )}
@@ -76,6 +84,22 @@ export default function TaskItem({
           )}
         </div>
       </div>
+      {task.type === 'once' && (task.startDate || task.deadline) && (
+        <div className="task-item__meta">
+          {task.startDate && (
+            <span className="task-item__meta-chip">
+              <span className="task-item__meta-label">開始日</span>
+              {task.startDate}
+            </span>
+          )}
+          {task.deadline && (
+            <span className="task-item__meta-chip">
+              <span className="task-item__meta-label">締切</span>
+              {formatDeadline(task.deadline)}
+            </span>
+          )}
+        </div>
+      )}
       <p className="task-item__title">{task.title}</p>
       <div className="task-item__progress">
         <input
