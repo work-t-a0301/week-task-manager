@@ -60,7 +60,7 @@
   flex-shrink: 0;
 }
 
-.task-item__checkbox {
+.task-item__info {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -139,6 +139,13 @@
   flex-shrink: 0;
 }
 
+.task-item__day-share {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 .task-item__meta {
   display: flex;
   flex-wrap: wrap;
@@ -198,8 +205,14 @@
 }
 
 .task-item__split-button:hover,
-.task-item__merge-button:hover {
+.task-item__merge-button:hover:not(:disabled) {
   background: var(--today-bg);
+}
+
+.task-item__merge-button:disabled {
+  border-color: var(--border);
+  color: #b7c2cc;
+  cursor: not-allowed;
 }
 
 .task-item__progress {
@@ -239,4 +252,13 @@
   color: #6b6b76;
   min-width: 32px;
   text-align: right;
+}
+
+.task-item__complete {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #6b6b76;
+  flex-shrink: 0;
 }

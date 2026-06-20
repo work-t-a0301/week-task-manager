@@ -81,6 +81,8 @@ function tasksOccurringOnDate(date, dateKey, tasks, schedule) {
       ...task,
       time: segment.time,
       duration: segment.duration,
+      totalDuration: task.duration,
+      sameDayCount: matches.length,
       segmentIndex: sortedDates.indexOf(dateKey) + 1,
       segmentTotal: sortedDates.length,
     }))
@@ -188,7 +190,11 @@ export function useWeekTasks() {
     return tasksOccurringOnDate(date, dateKey, tasks, schedule)
       .map((task) => {
         const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
-        return { ...occurrence, status: computeStatus(date, dateKey, occurrence, schedule) }
+        const dayShare =
+          occurrence.type === 'once'
+            ? Math.round((durationToMinutes(occurrence.duration) / durationToMinutes(occurrence.totalDuration)) * 100)
+            : null
+        return { ...occurrence, dayShare, status: computeStatus(date, dateKey, occurrence, schedule) }
       })
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
   }
@@ -344,18 +350,20 @@ export function useWeekTasks() {
     )
   }
 
-  // 同じ単発タスクの全セグメントを1つにまとめる。作業時間は全セグメントの合計になり、
-  // クリックした操作元のセグメントの日付・時刻が結果の日付・時刻として残る
+  // 同じ単発タスクの「同じ日」にあるセグメントだけを1つにまとめる（他の日のセグメントは
+  // 変更しない）。作業時間はその日にあったセグメントの合計になる
   function mergeSegments(taskId, dateKey, time) {
     setTasks((prev) =>
       prev.map((task) => {
         if (task.id !== taskId || task.type !== 'once') return task
         const segments = task.segments || []
-        if (segments.length < 2) return task
-        const target = segments.find((s) => s.date === dateKey && s.time === time)
-        if (!target) return task
-        const totalMinutes = segments.reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
-        return { ...task, segments: [{ date: target.date, time: target.time, duration: minutesToTime(totalMinutes) }] }
+        const sameDay = segments.filter((s) => s.date === dateKey)
+        if (sameDay.length < 2) return task
+        const target = sameDay.find((s) => s.time === time) || sameDay[0]
+        const totalMinutes = sameDay.reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
+        const merged = { date: target.date, time: target.time, duration: minutesToTime(totalMinutes) }
+        const others = segments.filter((s) => s.date !== dateKey)
+        return { ...task, segments: [...others, merged] }
       }),
     )
   }
@@ -372,7 +380,8 @@ export function useWeekTasks() {
   }
 
   // 締切が設定済みでまだ作業時間を割り切れていない単発タスクを、働く時間内の
-  // 空き時間（複数日にまたがってもよい）へ自動的に割り当てる
+  // 空き時間（複数日にまたがってもよい）へ自動的に割り当てる。締切までに分割しても
+  // 収まらない場合は、残りの作業時間を締切日に（働く時間を超えても）強制的に設定する
   function scheduleUnplacedTasks(schedule) {
     const candidates = tasks.filter((task) => {
       if (task.type !== 'once' || !task.deadline) return false
@@ -381,14 +390,13 @@ export function useWeekTasks() {
     })
 
     if (candidates.length === 0) {
-      return { scheduledTitles: [], partiallyScheduledTitles: [], unscheduledTitles: [] }
+      return { scheduledTitles: [], overflowTitles: [] }
     }
 
     const sorted = [...candidates].sort((a, b) => a.deadline.localeCompare(b.deadline))
     let working = tasks
     const scheduledTitles = []
-    const partiallyScheduledTitles = []
-    const unscheduledTitles = []
+    const overflowTitles = []
     const dayStart = timeToMinutes(schedule.startTime)
     const dayEnd = timeToMinutes(schedule.endTime)
     const breakInterval = breakIntervalMinutes(schedule)
@@ -402,7 +410,6 @@ export function useWeekTasks() {
         (sum, s) => sum + durationToMinutes(s.duration),
         0,
       )
-      const newSegments = []
       const taskStart = task.startDate ? dateFromKey(task.startDate) : todayStart
       const rangeStart = taskStart.getTime() > todayStart.getTime() ? taskStart : todayStart
 
@@ -411,7 +418,8 @@ export function useWeekTasks() {
         if (!schedule.workDays.includes(weekdayIndex)) continue
 
         const dateKey = toDateKey(cursor)
-        if (existingSegments.some((s) => s.date === dateKey)) continue
+        const currentSegments = working.find((t) => t.id === task.id).segments || []
+        if (currentSegments.some((s) => s.date === dateKey)) continue
 
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
@@ -423,24 +431,43 @@ export function useWeekTasks() {
         if (!gap) continue
 
         const allocated = Math.min(gap.size, remaining)
-        newSegments.push({ date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) })
+        const newSegment = { date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) }
         remaining -= allocated
-        working = working.map((t) =>
-          t.id === task.id ? { ...t, segments: [...existingSegments, ...newSegments] } : t,
-        )
+        working = working.map((t) => (t.id === task.id ? { ...t, segments: [...currentSegments, newSegment] } : t))
       }
 
-      if (newSegments.length === 0) {
-        unscheduledTitles.push(task.title)
-      } else if (remaining > 0) {
-        partiallyScheduledTitles.push(task.title)
+      if (remaining > 0) {
+        // 締切までの空き時間だけでは収まらないため、残りを締切日に強制的に積む
+        // （その日に既にセグメントがあれば作業時間を延長し、なければ新規に追加する）
+        const deadlineDateKey = toDateKey(deadlineDate)
+        working = working.map((t) => {
+          if (t.id !== task.id) return t
+          const segs = t.segments || []
+          const existingIndex = segs.findIndex((s) => s.date === deadlineDateKey)
+          if (existingIndex !== -1) {
+            const updatedSegs = [...segs]
+            const existing = updatedSegs[existingIndex]
+            updatedSegs[existingIndex] = {
+              ...existing,
+              duration: minutesToTime(durationToMinutes(existing.duration) + remaining),
+            }
+            return { ...t, segments: updatedSegs }
+          }
+          const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(deadlineDate, deadlineDateKey, working, schedule))
+          const allBusy = breakInterval ? [...busy, breakInterval] : busy
+          const gap = findLargestFreeGap(allBusy, dayStart, Math.max(dayStart, dayEnd - flatMinutes))
+          const time = gap ? minutesToTime(gap.start) : schedule.startTime
+          return { ...t, segments: [...segs, { date: deadlineDateKey, time, duration: minutesToTime(remaining) }] }
+        })
+        remaining = 0
+        overflowTitles.push(task.title)
       } else {
         scheduledTitles.push(task.title)
       }
     }
 
     setTasks(working)
-    return { scheduledTitles, partiallyScheduledTitles, unscheduledTitles }
+    return { scheduledTitles, overflowTitles }
   }
 
   return {

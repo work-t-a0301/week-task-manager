@@ -18,6 +18,7 @@ export default function TaskItem({
   onDelete,
   onSplit,
   onMerge,
+  mergeDisabled,
 }) {
   const badge = RECURRENCE_BADGES[task.type]
 
@@ -36,8 +37,7 @@ export default function TaskItem({
               ⠿⠿
             </span>
           )}
-          <label className="task-item__checkbox">
-            <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
+          <div className="task-item__info">
             {badge && <span className="task-item__badge">{badge}</span>}
             {task.time && <span className="task-item__time">{task.time}</span>}
             {task.type === 'once' ? (
@@ -51,6 +51,7 @@ export default function TaskItem({
                   onChange={(event) => onDurationChange(task, event.target.value)}
                   aria-label="この日の作業時間"
                 />
+                {task.dayShare != null && <span className="task-item__day-share">({task.dayShare}%)</span>}
               </span>
             ) : (
               <span className="task-item__duration">作業時間 {task.duration}</span>
@@ -65,7 +66,7 @@ export default function TaskItem({
                 {task.status}
               </span>
             )}
-          </label>
+          </div>
         </div>
         <div className="task-item__actions">
           {onSplit && (
@@ -74,7 +75,12 @@ export default function TaskItem({
             </button>
           )}
           {onMerge && (
-            <button type="button" className="task-item__merge-button" onClick={() => onMerge(task)}>
+            <button
+              type="button"
+              className="task-item__merge-button"
+              onClick={() => onMerge(task)}
+              disabled={mergeDisabled}
+            >
               集約
             </button>
           )}
@@ -85,8 +91,14 @@ export default function TaskItem({
           )}
         </div>
       </div>
-      {task.type === 'once' && (task.startDate || task.deadline) && (
+      {task.type === 'once' && (task.startDate || task.deadline || task.totalDuration) && (
         <div className="task-item__meta">
+          {task.totalDuration && (
+            <span className="task-item__meta-chip">
+              <span className="task-item__meta-label">全作業時間</span>
+              {task.totalDuration}
+            </span>
+          )}
           {task.startDate && (
             <span className="task-item__meta-chip">
               <span className="task-item__meta-label">開始日</span>
@@ -115,6 +127,10 @@ export default function TaskItem({
           aria-label="進捗"
         />
         <span className="task-item__progress-label">{task.progress}%</span>
+        <label className="task-item__complete">
+          <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
+          完了
+        </label>
       </div>
     </li>
   )

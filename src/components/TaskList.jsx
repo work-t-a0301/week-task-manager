@@ -78,23 +78,21 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     } else {
       onAddTask({ type, ...fields })
     }
+    setActiveGroup(type)
     resetForm()
   }
 
   function handleScheduleClick() {
     const result = onScheduleToCalendar(schedule)
-    const { scheduledTitles, partiallyScheduledTitles, unscheduledTitles } = result
-    if (scheduledTitles.length === 0 && partiallyScheduledTitles.length === 0 && unscheduledTitles.length === 0) {
+    const { scheduledTitles, overflowTitles } = result
+    if (scheduledTitles.length === 0 && overflowTitles.length === 0) {
       setScheduleResult('カレンダーに登録待ちのタスクはありません')
       return
     }
     const parts = []
     if (scheduledTitles.length > 0) parts.push(`${scheduledTitles.length}件をカレンダーに登録しました`)
-    if (partiallyScheduledTitles.length > 0) {
-      parts.push(`${partiallyScheduledTitles.length}件は複数日に分けて一部のみ登録しました`)
-    }
-    if (unscheduledTitles.length > 0) {
-      parts.push(`${unscheduledTitles.length}件は締切までに空き時間が見つかりませんでした`)
+    if (overflowTitles.length > 0) {
+      parts.push(`${overflowTitles.length}件は締切までに収まらず、締切日に作業時間を超えて登録しました`)
     }
     setScheduleResult(parts.join(' / '))
   }

@@ -99,11 +99,8 @@ export default function DayColumn({
                 }
                 onDelete={task.type === 'once' ? onDelete : undefined}
                 onSplit={task.type === 'once' ? (occurrence) => onSplit(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
-                onMerge={
-                  task.type === 'once' && task.segmentTotal > 1
-                    ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time)
-                    : undefined
-                }
+                onMerge={task.type === 'once' ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
+                mergeDisabled={task.sameDayCount <= 1}
               />
             ))}
           </ul>
