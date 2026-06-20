@@ -1,7 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { initialTasks } from '../data/initialTasks'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+const STORAGE_KEY = 'week-task-manager:tasks'
+
+function loadStoredTasks() {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : initialTasks
+  } catch {
+    return initialTasks
+  }
+}
 
 function getMonday(date) {
   const d = new Date(date)
@@ -19,7 +29,11 @@ export function toDateKey(date) {
 
 export function useWeekTasks() {
   const [weekOffset, setWeekOffset] = useState(0)
-  const [tasks, setTasks] = useState(initialTasks)
+  const [tasks, setTasks] = useState(loadStoredTasks)
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+  }, [tasks])
 
   const weekDates = useMemo(() => {
     const monday = getMonday(new Date())
