@@ -1,0 +1,77 @@
+# week-task-manager
+
+週間スケジュール管理アプリ。曜日ごとに予定・タスクを時間軸で管理するカレンダー的なフロントエンドアプリ。
+
+## 技術スタック
+
+- **React** — UIコンポーネント
+- **Vite** — 開発サーバー・ビルドツール
+- **JavaScript (ES6+)** — ロジック
+
+## ファイル構成
+
+```
+week-task-manager/
+├── index.html         # エントリポイント
+├── package.json
+├── vite.config.js
+├── src/
+│   ├── main.jsx        # アプリのマウント
+│   ├── App.jsx          # ルートコンポーネント
+│   ├── components/      # UIコンポーネント
+│   ├── hooks/           # カスタムフック
+│   └── data/            # 初期データ・型定義
+└── public/
+```
+
+## 開発ルール
+
+- コンポーネントは関数コンポーネント + Hooksで記述する。クラスコンポーネントは使わない。
+- `dangerouslySetInnerHTML` の使用は禁止。XSS防止のため通常のJSX描画を使うこと。
+- 状態管理はまずReact標準のuseState/useContextで行う。状態が複雑化するまで外部ライブラリ（Redux等）は導入しない。
+- `console.log` はデバッグ用途のみ。本番コードに残さない。
+- コメントは「なぜ（WHY）」が自明でない箇所にのみ記述する。
+- スタイルはコンポーネント単位のCSSファイル（`ComponentName.css`）で管理し、インラインstyleは避ける。
+
+## アプリ仕様
+
+- 表示単位：1週間（月〜日、または日〜土）
+- 曜日ごとに予定・タスクを登録・編集・削除できる
+- タスクには時間帯・タイトル・完了状態を設定できる
+- 週の切り替え（前週・次週への移動）ができる
+
+## 動作確認
+
+```
+npm install
+npm run dev
+```
+
+## よくある作業パターン
+
+- **コンポーネント追加**: `src/components/` に `.jsx` と対応する `.css` を追加する
+- **データ構造変更**: `src/data/` 内の初期データ・型定義を編集する
+- **状態ロジック変更**: `src/hooks/` のカスタムフックを編集する
+
+## Git運用ルール
+
+**コードを変更するたびに、必ず GitHub にプッシュすること。**
+
+```bash
+git add <変更ファイル>
+git commit -m "変更内容を簡潔に記述"
+git push origin main
+```
+
+- コミットメッセージは日本語可。変更の「なぜ」が伝わる内容にする。
+- `git add .` や `git add -A` は機密ファイル（.env 等）を誤って含めるリスクがあるため、原則としてファイルを個別に指定する。
+- force push（`--force`）は禁止。main ブランチへの force push は特に厳禁。
+- `.env` などの機密情報を含むファイルはコミットしない。`.gitignore` に必ず追加する。
+
+## GitHubリポジトリ
+
+https://github.com/work-t-a0301/week-task-manager.git
+
+## デプロイ先
+
+https://github.com/work-t-a0301/week-task-manager/

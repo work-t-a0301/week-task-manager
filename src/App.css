@@ -1,0 +1,17 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.app__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 800px) {
+  .app__grid {
+    grid-template-columns: 1fr;
+  }
+}

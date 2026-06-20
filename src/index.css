@@ -1,0 +1,18 @@
+:root {
+  --text: #2b2b33;
+  --bg: #f7f7fa;
+  --border: #e0e0e6;
+  --accent: #4a6cf7;
+  --today-bg: #eef2ff;
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
