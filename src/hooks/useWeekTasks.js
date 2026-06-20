@@ -403,6 +403,21 @@ export function useWeekTasks() {
     )
   }
 
+  // 単発タスクをドラッグ＆ドロップで並べ替える。一覧の上にあるタスクほど
+  // 「カレンダーに自動設定」での優先度が高くなる
+  function reorderTasks(draggedId, targetId) {
+    if (draggedId === targetId) return
+    setTasks((prev) => {
+      const draggedIndex = prev.findIndex((t) => t.id === draggedId)
+      if (draggedIndex === -1) return prev
+      const next = [...prev]
+      const [dragged] = next.splice(draggedIndex, 1)
+      const targetIndex = next.findIndex((t) => t.id === targetId)
+      next.splice(targetIndex === -1 ? draggedIndex : targetIndex, 0, dragged)
+      return next
+    })
+  }
+
   function deleteTask(id) {
     setTasks((prev) => prev.filter((task) => task.id !== id))
     setOccurrenceStates((prev) => {
@@ -428,10 +443,9 @@ export function useWeekTasks() {
       return { scheduledTitles: [], overflowTitles: [] }
     }
 
-    // 作業時間が多いタスクから優先的に空き時間を確保する（同じ場合は締切が早い方を優先）
-    const sorted = [...candidates].sort(
-      (a, b) => durationToMinutes(b.duration) - durationToMinutes(a.duration) || a.deadline.localeCompare(b.deadline),
-    )
+    // タスク一覧の並び順（上にあるタスクほど優先）で空き時間を確保する。
+    // candidates は tasks をフィルタしたものなので、既に一覧の並び順を保っている
+    const sorted = candidates
     let working = tasks
     const scheduledTitles = []
     const overflowTitles = []
@@ -525,6 +539,7 @@ export function useWeekTasks() {
     splitSegment,
     mergeSegments,
     removeSegment,
+    reorderTasks,
     deleteTask,
     scheduleUnplacedTasks,
   }

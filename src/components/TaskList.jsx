@@ -11,7 +11,15 @@ const TYPE_OPTIONS = [
 ]
 const GROUP_ORDER = ['daily', 'weekly', 'once']
 
-export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onDeleteTask, onScheduleToCalendar }) {
+export default function TaskList({
+  tasks,
+  schedule,
+  onAddTask,
+  onUpdateTask,
+  onDeleteTask,
+  onReorderTask,
+  onScheduleToCalendar,
+}) {
   const [editingId, setEditingId] = useState(null)
   const [type, setType] = useState('daily')
   const [duration, setDuration] = useState('01:00')
@@ -23,6 +31,26 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   const [scheduleResult, setScheduleResult] = useState('')
   const [activeGroup, setActiveGroup] = useState('daily')
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [dragOverId, setDragOverId] = useState(null)
+
+  function handleDragStart(event, task) {
+    event.dataTransfer.setData('application/json', JSON.stringify({ taskId: task.id }))
+    event.dataTransfer.effectAllowed = 'move'
+  }
+
+  function handleDragOver(event, task) {
+    event.preventDefault()
+    setDragOverId(task.id)
+  }
+
+  function handleDrop(event, task) {
+    event.preventDefault()
+    setDragOverId(null)
+    const raw = event.dataTransfer.getData('application/json')
+    if (!raw) return
+    const { taskId } = JSON.parse(raw)
+    onReorderTask(taskId, task.id)
+  }
 
   function resetForm() {
     setEditingId(null)
@@ -264,13 +292,40 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
               {activeGroup === 'once' && scheduleResult && (
                 <p className="task-list__schedule-result">{scheduleResult}</p>
               )}
+              {activeGroup === 'once' && groupTasks.length > 1 && (
+                <p className="task-list__priority-hint">
+                  ドラッグして並べ替えできます。上にあるタスクほど「カレンダーに自動設定」での優先度が高くなります
+                </p>
+              )}
               {groupTasks.length === 0 ? (
                 <p className="task-list__empty">登録されているタスクはありません</p>
               ) : (
                 <ul className="task-list__items">
-                  {groupTasks.map((task) => (
-                    <li key={task.id} className="task-list__item">
+                  {groupTasks.map((task, index) => (
+                    <li
+                      key={task.id}
+                      className={`task-list__item${dragOverId === task.id ? ' task-list__item--drag-over' : ''}`}
+                      onDragOver={activeGroup === 'once' ? (event) => handleDragOver(event, task) : undefined}
+                      onDragLeave={activeGroup === 'once' ? () => setDragOverId(null) : undefined}
+                      onDrop={activeGroup === 'once' ? (event) => handleDrop(event, task) : undefined}
+                    >
                       <div className="task-list__item-row">
+                        {activeGroup === 'once' && (
+                          <span
+                            className="task-list__drag-handle"
+                            draggable
+                            onDragStart={(event) => handleDragStart(event, task)}
+                            aria-hidden="true"
+                            title="ドラッグして優先順位を変更"
+                          >
+                            ⠿⠿
+                          </span>
+                        )}
+                        {activeGroup === 'once' && (
+                          <span className="task-list__priority-badge" title="優先度（上ほど高い）">
+                            {index + 1}
+                          </span>
+                        )}
                         <p className="task-list__title">{task.title}</p>
                         <div className="task-list__item-actions">
                           <button

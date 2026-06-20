@@ -25,6 +25,7 @@ function App() {
     splitSegment,
     mergeSegments,
     removeSegment,
+    reorderTasks,
     deleteTask,
     scheduleUnplacedTasks,
   } = useWeekTasks()
@@ -53,6 +54,7 @@ function App() {
             onAddTask={addTask}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
+            onReorderTask={reorderTasks}
             onScheduleToCalendar={scheduleUnplacedTasks}
           />
         </aside>
