@@ -17,6 +17,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
   const [title, setTitle] = useState('')
   const [weekday, setWeekday] = useState(0)
   const [deadline, setDeadline] = useState('')
+  const [startDate, setStartDate] = useState('')
   const [error, setError] = useState('')
   const [scheduleResult, setScheduleResult] = useState('')
 
@@ -27,6 +28,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     setTitle('')
     setWeekday(0)
     setDeadline('')
+    setStartDate('')
     setError('')
   }
 
@@ -37,6 +39,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     setTitle(task.title)
     setWeekday(task.weekday ?? schedule.workDays[0] ?? 0)
     setDeadline(task.deadline ?? '')
+    setStartDate(task.startDate ?? '')
     setError('')
   }
 
@@ -57,12 +60,17 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
       setError('締切の日時を選択してください')
       return
     }
+    if (type === 'once' && startDate && deadline && startDate > deadline.slice(0, 10)) {
+      setError('開始日は締切より前にしてください')
+      return
+    }
     setError('')
     const fields = {
       title: title.trim(),
       duration,
       weekday: type === 'weekly' ? weekday : undefined,
       deadline: type === 'once' ? deadline : undefined,
+      startDate: type === 'once' ? startDate || undefined : undefined,
     }
     if (editingId) {
       onUpdateTask(editingId, fields)
@@ -134,6 +142,18 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                 )
               })}
             </fieldset>
+          )}
+
+          {type === 'once' && (
+            <label className="task-list__field-label">
+              開始日（任意）
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+                aria-label="開始日"
+              />
+            </label>
           )}
 
           {type === 'once' && (
@@ -238,7 +258,8 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
 
 function describeOnceSchedule(task) {
   const segments = task.segments || []
-  if (segments.length === 0) return `締切: ${task.deadline}`
+  const startLabel = task.startDate ? ` / 開始日: ${task.startDate}` : ''
+  if (segments.length === 0) return `締切: ${task.deadline}${startLabel}`
   const dates = segments.map((s) => s.date).join(' / ')
-  return segments.length > 1 ? `登録済: ${dates}（${segments.length}日に分割）` : `登録済: ${dates}`
+  return segments.length > 1 ? `登録済: ${dates}（${segments.length}日に分割）${startLabel}` : `登録済: ${dates}${startLabel}`
 }

@@ -3,52 +3,78 @@ import './TaskItem.css'
 const RECURRENCE_BADGES = { daily: '毎日', weekly: '週1' }
 const STATUS_MODIFIERS = { 順調: 'ontrack', 遅延: 'late', 前倒し: 'ahead' }
 
-export default function TaskItem({ task, draggable, onDragStart, onToggle, onProgressChange, onDurationChange, onDelete }) {
+export default function TaskItem({
+  task,
+  draggable,
+  onDragStart,
+  onToggle,
+  onProgressChange,
+  onDurationChange,
+  onDelete,
+  onSplit,
+  onMerge,
+}) {
   const badge = RECURRENCE_BADGES[task.type]
 
   return (
-    <li
-      className={`task-item${task.completed ? ' task-item--completed' : ''}${draggable ? ' task-item--draggable' : ''}`}
-      draggable={draggable}
-      onDragStart={draggable ? (event) => onDragStart(event, task) : undefined}
-    >
+    <li className={`task-item${task.completed ? ' task-item--completed' : ''}${draggable ? ' task-item--draggable' : ''}`}>
       <div className="task-item__row">
-        <label className="task-item__checkbox">
+        <div className="task-item__main">
           {draggable && (
-            <span className="task-item__drag-handle" aria-hidden="true" title="ドラッグで移動">
-              ⠿
+            <span
+              className="task-item__drag-handle"
+              draggable
+              onDragStart={(event) => onDragStart(event, task)}
+              aria-hidden="true"
+              title="ここをドラッグして移動"
+            >
+              ⠿⠿
             </span>
           )}
-          <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
-          {badge && <span className="task-item__badge">{badge}</span>}
-          {task.time && <span className="task-item__time">{task.time}</span>}
-          {task.type === 'once' ? (
-            <input
-              type="time"
-              className="task-item__duration-input"
-              value={task.duration}
-              onChange={(event) => onDurationChange(task, event.target.value)}
-              aria-label="この日の作業時間"
-            />
-          ) : (
-            <span className="task-item__duration">作業時間 {task.duration}</span>
+          <label className="task-item__checkbox">
+            <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
+            {badge && <span className="task-item__badge">{badge}</span>}
+            {task.time && <span className="task-item__time">{task.time}</span>}
+            {task.type === 'once' ? (
+              <input
+                type="time"
+                className="task-item__duration-input"
+                value={task.duration}
+                onChange={(event) => onDurationChange(task, event.target.value)}
+                aria-label="この日の作業時間"
+              />
+            ) : (
+              <span className="task-item__duration">作業時間 {task.duration}</span>
+            )}
+            {task.segmentTotal > 1 && (
+              <span className="task-item__split-badge">
+                {task.segmentIndex}/{task.segmentTotal}日目
+              </span>
+            )}
+            {task.status && (
+              <span className={`task-item__status task-item__status--${STATUS_MODIFIERS[task.status]}`}>
+                {task.status}
+              </span>
+            )}
+          </label>
+        </div>
+        <div className="task-item__actions">
+          {onSplit && (
+            <button type="button" className="task-item__split-button" onClick={() => onSplit(task)}>
+              分割
+            </button>
           )}
-          {task.segmentTotal > 1 && (
-            <span className="task-item__split-badge">
-              {task.segmentIndex}/{task.segmentTotal}日目
-            </span>
+          {onMerge && (
+            <button type="button" className="task-item__merge-button" onClick={() => onMerge(task)}>
+              集約
+            </button>
           )}
-          {task.status && (
-            <span className={`task-item__status task-item__status--${STATUS_MODIFIERS[task.status]}`}>
-              {task.status}
-            </span>
+          {onDelete && (
+            <button type="button" className="task-item__delete" onClick={() => onDelete(task.id)} aria-label="削除">
+              ×
+            </button>
           )}
-        </label>
-        {onDelete && (
-          <button type="button" className="task-item__delete" onClick={() => onDelete(task.id)} aria-label="削除">
-            ×
-          </button>
-        )}
+        </div>
       </div>
       <p className="task-item__title">{task.title}</p>
       <div className="task-item__progress">

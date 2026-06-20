@@ -34,13 +34,18 @@ export default function DayColumn({
   onDurationChange,
   onDelete,
   onMoveTask,
+  onSplit,
+  onMerge,
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
   const weekdayIndex = (date.getDay() + 6) % 7
   const remaining = formatRemainingTime(remainingMinutes)
 
   function handleDragStart(event, task) {
-    event.dataTransfer.setData('application/json', JSON.stringify({ taskId: task.id, fromDateKey: task.dateKey }))
+    event.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({ taskId: task.id, fromDateKey: task.dateKey, fromTime: task.time }),
+    )
     event.dataTransfer.effectAllowed = 'move'
   }
 
@@ -56,8 +61,8 @@ export default function DayColumn({
     if (!isWorkDay) return
     const raw = event.dataTransfer.getData('application/json')
     if (!raw) return
-    const { taskId, fromDateKey } = JSON.parse(raw)
-    onMoveTask(taskId, fromDateKey, dateKey)
+    const { taskId, fromDateKey, fromTime } = JSON.parse(raw)
+    onMoveTask(taskId, fromDateKey, fromTime, dateKey)
   }
 
   return (
@@ -82,14 +87,22 @@ export default function DayColumn({
         <ul className="day-column__tasks">
           {tasks.map((task) => (
             <TaskItem
-              key={`${task.id}:${task.dateKey}`}
+              key={`${task.id}:${task.dateKey}:${task.time || ''}`}
               task={task}
               draggable={task.type === 'weekly' || task.type === 'once'}
               onDragStart={handleDragStart}
               onToggle={(occurrence) => onToggle(occurrence.id, occurrence.dateKey)}
               onProgressChange={(occurrence, progress) => onProgressChange(occurrence.id, occurrence.dateKey, progress)}
-              onDurationChange={(occurrence, duration) => onDurationChange(occurrence.id, occurrence.dateKey, duration)}
+              onDurationChange={(occurrence, duration) =>
+                onDurationChange(occurrence.id, occurrence.dateKey, occurrence.time, duration)
+              }
               onDelete={task.type === 'once' ? onDelete : undefined}
+              onSplit={task.type === 'once' ? (occurrence) => onSplit(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
+              onMerge={
+                task.type === 'once' && task.segmentTotal > 1
+                  ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time)
+                  : undefined
+              }
             />
           ))}
         </ul>

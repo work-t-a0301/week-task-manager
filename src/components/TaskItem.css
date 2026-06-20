@@ -15,20 +15,27 @@
 }
 
 .task-item--draggable {
-  border-style: dashed;
-  border-color: var(--accent-2);
-  cursor: grab;
-}
-
-.task-item--draggable:active {
-  cursor: grabbing;
+  border-left: 3px dashed var(--accent-2);
 }
 
 .task-item__drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--today-bg);
+  border: 1px dashed var(--accent-2);
   color: var(--accent-2);
-  font-size: 13px;
+  font-size: 11px;
+  letter-spacing: -2px;
   cursor: grab;
   flex-shrink: 0;
+}
+
+.task-item__drag-handle:active {
+  cursor: grabbing;
 }
 
 .task-item__row {
@@ -36,6 +43,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.task-item__main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.task-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .task-item__checkbox {
@@ -124,6 +146,24 @@
 
 .task-item__delete:hover {
   color: #e03131;
+}
+
+.task-item__split-button,
+.task-item__merge-button {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-2);
+  background: #fff;
+  color: var(--accent-2);
+  cursor: pointer;
+}
+
+.task-item__split-button:hover,
+.task-item__merge-button:hover {
+  background: var(--today-bg);
 }
 
 .task-item__progress {

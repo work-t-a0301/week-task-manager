@@ -42,6 +42,13 @@
   font-size: 13px;
 }
 
+.work-schedule-form__break-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
 .work-schedule-form__error {
   margin: 0;
   font-size: 13px;

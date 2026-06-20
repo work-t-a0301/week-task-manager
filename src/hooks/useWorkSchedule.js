@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'week-task-manager:work-schedule'
-const DEFAULT_SCHEDULE = { workDays: [], startTime: '09:00', endTime: '18:00' }
+const DEFAULT_SCHEDULE = { workDays: [], startTime: '09:00', endTime: '18:00', breakStart: null, breakEnd: null }
 
 function loadStoredSchedule() {
   try {
