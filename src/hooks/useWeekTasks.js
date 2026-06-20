@@ -216,8 +216,12 @@ export function useWeekTasks() {
     return tasksOccurringOnDate(date, dateKey, tasks, schedule)
       .map((task) => {
         const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
-        const exceedsDeadline =
-          occurrence.type === 'once' ? taskExceedsDeadline(occurrence.segments, occurrence.deadline) : false
+        // 超過警告は締切日の出現にのみ表示する（強制配置は必ず締切日に積まれるため）
+        const isDeadlineDayOccurrence =
+          occurrence.type === 'once' && occurrence.deadline && dateKey === toDateKey(new Date(occurrence.deadline))
+        const exceedsDeadline = isDeadlineDayOccurrence
+          ? taskExceedsDeadline(occurrence.segments, occurrence.deadline)
+          : false
         // 全作業時間とカレンダーに設定済みのセグメント合計との差分（正なら未設定分が残っている、
         // 負ならその逆に全作業時間を超えて設定されている）
         const scheduledDiffMinutes =
@@ -499,6 +503,22 @@ export function useWeekTasks() {
           const newSegment = { date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) }
           remaining -= allocated
           working = working.map((t) => (t.id === task.id ? { ...t, segments: [...currentSegments, newSegment] } : t))
+        }
+
+        // 空き枠が複数に分かれていて同じ日に複数セグメントができた場合は、
+        // 同じ日の出現が複数に分割表示されないよう1つのセグメントにまとめる
+        const segmentsForDay = working.find((t) => t.id === task.id).segments.filter((s) => s.date === dateKey)
+        if (segmentsForDay.length > 1) {
+          const earliestTime = segmentsForDay.reduce(
+            (earliest, s) => (timeToMinutes(s.time) < timeToMinutes(earliest) ? s.time : earliest),
+            segmentsForDay[0].time,
+          )
+          const totalDayMinutes = segmentsForDay.reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
+          working = working.map((t) => {
+            if (t.id !== task.id) return t
+            const others = t.segments.filter((s) => s.date !== dateKey)
+            return { ...t, segments: [...others, { date: dateKey, time: earliestTime, duration: minutesToTime(totalDayMinutes) }] }
+          })
         }
       }
 

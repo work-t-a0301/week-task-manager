@@ -166,6 +166,10 @@
   color: #c92a2a;
 }
 
+.task-item__diff-text {
+  flex-shrink: 0;
+}
+
 .task-item__title {
   margin: 0;
   font-size: 14px;
