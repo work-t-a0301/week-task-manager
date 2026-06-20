@@ -35,10 +35,10 @@ export default function TaskItem({
           )}
           <div className="task-item__info">
             {badge && <span className="task-item__badge">{badge}</span>}
-            {task.time && <span className="task-item__time">{task.time}</span>}
             {task.type === 'once' ? (
-              <span className="task-item__duration-wrap">
-                <span className="task-item__duration-text">作業時間</span>
+              <span className="task-item__meta-chip">
+                <span className="task-item__meta-label">作業時間</span>
+                {task.totalDuration}中
                 <input
                   type="time"
                   step="600"
@@ -47,11 +47,26 @@ export default function TaskItem({
                   onChange={(event) => onDurationChange(task, event.target.value)}
                   aria-label="この日の作業時間"
                 />
-                {task.dayShare != null && <span className="task-item__day-share">({task.dayShare}%)</span>}
               </span>
             ) : (
-              <span className="task-item__duration">作業時間 {task.duration}</span>
+              <span className="task-item__meta-chip">
+                <span className="task-item__meta-label">作業時間</span>
+                {task.duration}
+              </span>
             )}
+            {task.type === 'once' && task.startDate && (
+              <span className="task-item__meta-chip">
+                <span className="task-item__meta-label">開始日</span>
+                {formatMonthDay(task.startDate)}
+              </span>
+            )}
+            {task.type === 'once' && task.deadline && (
+              <span className="task-item__meta-chip">
+                <span className="task-item__meta-label">締切</span>
+                {formatDeadlineLabel(task.deadline)}
+              </span>
+            )}
+            {task.exceedsDeadline && <span className="task-item__overflow-warning">作業時間が超過します</span>}
             {task.segmentTotal > 1 && (
               <span className="task-item__split-badge">
                 {task.segmentIndex}/{task.segmentTotal}日目
@@ -81,34 +96,12 @@ export default function TaskItem({
             </button>
           )}
           {onDelete && (
-            <button type="button" className="task-item__delete" onClick={() => onDelete(task.id)} aria-label="削除">
+            <button type="button" className="task-item__delete" onClick={() => onDelete(task)} aria-label="削除">
               ×
             </button>
           )}
         </div>
       </div>
-      {task.type === 'once' && (task.startDate || task.deadline || task.totalDuration) && (
-        <div className="task-item__meta">
-          {task.totalDuration && (
-            <span className="task-item__meta-chip">
-              <span className="task-item__meta-label">全作業時間</span>
-              {task.totalDuration}
-            </span>
-          )}
-          {task.startDate && (
-            <span className="task-item__meta-chip">
-              <span className="task-item__meta-label">開始日</span>
-              {formatMonthDay(task.startDate)}
-            </span>
-          )}
-          {task.deadline && (
-            <span className="task-item__meta-chip">
-              <span className="task-item__meta-label">締切</span>
-              {formatDeadlineLabel(task.deadline)}
-            </span>
-          )}
-        </div>
-      )}
       <div className="task-item__title-row">
         <p className="task-item__title">{task.title}</p>
         <div className="task-item__progress">

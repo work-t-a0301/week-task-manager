@@ -181,6 +181,18 @@ function computeStatus(date, dateKey, task, schedule) {
   return '順調'
 }
 
+// 単発タスクの最後（最も遅く終わる）セグメントの終了時刻が締切を過ぎていないかを判定する
+function taskExceedsDeadline(segments, deadline) {
+  if (!deadline || !segments || segments.length === 0) return false
+  const deadlineDate = new Date(deadline)
+  return segments.some((s) => {
+    const segDate = dateFromKey(s.date)
+    const endMinutes = timeToMinutes(s.time) + durationToMinutes(s.duration)
+    const endDateTime = new Date(segDate.getFullYear(), segDate.getMonth(), segDate.getDate(), 0, endMinutes)
+    return endDateTime.getTime() > deadlineDate.getTime()
+  })
+}
+
 export function useWeekTasks() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [tasks, setTasks] = useState(() => loadJSON(TASKS_KEY, initialTasks))
@@ -204,11 +216,9 @@ export function useWeekTasks() {
     return tasksOccurringOnDate(date, dateKey, tasks, schedule)
       .map((task) => {
         const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
-        const dayShare =
-          occurrence.type === 'once'
-            ? Math.round((durationToMinutes(occurrence.duration) / durationToMinutes(occurrence.totalDuration)) * 100)
-            : null
-        return { ...occurrence, dayShare, status: computeStatus(date, dateKey, occurrence, schedule) }
+        const exceedsDeadline =
+          occurrence.type === 'once' ? taskExceedsDeadline(occurrence.segments, occurrence.deadline) : false
+        return { ...occurrence, exceedsDeadline, status: computeStatus(date, dateKey, occurrence, schedule) }
       })
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
   }
@@ -382,6 +392,17 @@ export function useWeekTasks() {
     )
   }
 
+  // カレンダー表示からその1セグメントだけを取り除く。タスク自体は登録済みタスク
+  // 一覧から削除されず、未登録分として残るので再度「カレンダーに自動設定」できる
+  function removeSegment(taskId, dateKey, time) {
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId || task.type !== 'once') return task
+        return { ...task, segments: (task.segments || []).filter((s) => !(s.date === dateKey && s.time === time)) }
+      }),
+    )
+  }
+
   function deleteTask(id) {
     setTasks((prev) => prev.filter((task) => task.id !== id))
     setOccurrenceStates((prev) => {
@@ -407,7 +428,10 @@ export function useWeekTasks() {
       return { scheduledTitles: [], overflowTitles: [] }
     }
 
-    const sorted = [...candidates].sort((a, b) => a.deadline.localeCompare(b.deadline))
+    // 作業時間が多いタスクから優先的に空き時間を確保する（同じ場合は締切が早い方を優先）
+    const sorted = [...candidates].sort(
+      (a, b) => durationToMinutes(b.duration) - durationToMinutes(a.duration) || a.deadline.localeCompare(b.deadline),
+    )
     let working = tasks
     const scheduledTitles = []
     const overflowTitles = []
@@ -500,6 +524,7 @@ export function useWeekTasks() {
     moveTask,
     splitSegment,
     mergeSegments,
+    removeSegment,
     deleteTask,
     scheduleUnplacedTasks,
   }

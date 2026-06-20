@@ -78,13 +78,6 @@
   flex-shrink: 0;
 }
 
-.task-item__time,
-.task-item__duration {
-  font-size: 12px;
-  color: #6b6b76;
-  flex-shrink: 0;
-}
-
 .task-item__status {
   font-size: 11px;
   font-weight: 600;
@@ -118,38 +111,23 @@
   flex-shrink: 0;
 }
 
-.task-item__duration-wrap {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-
-.task-item__duration-text {
-  font-size: 12px;
-  color: #6b6b76;
-}
-
 .task-item__duration-input {
-  font-size: 12px;
-  color: #6b6b76;
+  font-size: 11px;
+  color: #555;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 1px 4px;
+  padding: 0px 3px;
   flex-shrink: 0;
 }
 
-.task-item__day-share {
+.task-item__overflow-warning {
   font-size: 11px;
-  color: var(--accent);
   font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ffe3e3;
+  color: #c92a2a;
   flex-shrink: 0;
-}
-
-.task-item__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
 }
 
 .task-item__meta-chip {

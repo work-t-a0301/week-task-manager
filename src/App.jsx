@@ -24,6 +24,7 @@ function App() {
     moveTask,
     splitSegment,
     mergeSegments,
+    removeSegment,
     deleteTask,
     scheduleUnplacedTasks,
   } = useWeekTasks()
@@ -73,7 +74,7 @@ function App() {
                   onToggle={toggleCompletion}
                   onProgressChange={setProgress}
                   onDurationChange={updateSegmentDuration}
-                  onDelete={deleteTask}
+                  onRemoveSegment={removeSegment}
                   onMoveTask={moveTask}
                   onSplit={splitSegment}
                   onMerge={mergeSegments}

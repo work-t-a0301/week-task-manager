@@ -35,8 +35,8 @@
 }
 
 .app__sidebar {
-  flex: 0 0 330px;
-  min-width: 300px;
+  flex: 0 0 420px;
+  min-width: 380px;
 }
 
 .app__calendar {

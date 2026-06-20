@@ -271,10 +271,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                   {groupTasks.map((task) => (
                     <li key={task.id} className="task-list__item">
                       <div className="task-list__item-row">
-                        {task.type === 'weekly' && (
-                          <span className="task-list__detail">{WEEKDAY_LABELS[task.weekday]}曜日</span>
-                        )}
-                        <span className="task-list__duration">作業時間 {task.duration}</span>
+                        <p className="task-list__title">{task.title}</p>
                         <div className="task-list__item-actions">
                           <button
                             type="button"
@@ -294,23 +291,38 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                           </button>
                         </div>
                       </div>
-                      {task.type === 'once' && (
-                        <div className="task-list__meta">
+                      <div className="task-list__meta">
+                        <span className="task-list__meta-chip">
+                          <span className="task-list__meta-label">作業時間</span>
+                          {task.duration}
+                        </span>
+                        {task.type === 'weekly' && (
+                          <span className="task-list__meta-chip">
+                            <span className="task-list__meta-label">曜日</span>
+                            {WEEKDAY_LABELS[task.weekday]}
+                          </span>
+                        )}
+                        {task.type === 'once' && (
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">開始日</span>
                             {task.startDate ? formatMonthDay(task.startDate) : '指定なし'}
                           </span>
+                        )}
+                        {task.type === 'once' && (
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">締切</span>
                             {formatDeadlineLabel(task.deadline)}
                           </span>
+                        )}
+                      </div>
+                      {task.type === 'once' && (
+                        <div className="task-list__meta">
                           <span className="task-list__meta-chip">
                             <span className="task-list__meta-label">登録状況</span>
                             {describeScheduleStatus(task)}
                           </span>
                         </div>
                       )}
-                      <p className="task-list__title">{task.title}</p>
                     </li>
                   ))}
                 </ul>

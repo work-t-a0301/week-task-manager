@@ -32,7 +32,7 @@ export default function DayColumn({
   onToggle,
   onProgressChange,
   onDurationChange,
-  onDelete,
+  onRemoveSegment,
   onMoveTask,
   onSplit,
   onMerge,
@@ -97,7 +97,11 @@ export default function DayColumn({
                 onDurationChange={(occurrence, duration) =>
                   onDurationChange(occurrence.id, occurrence.dateKey, occurrence.time, duration)
                 }
-                onDelete={task.type === 'once' ? onDelete : undefined}
+                onDelete={
+                  task.type === 'once'
+                    ? (occurrence) => onRemoveSegment(occurrence.id, occurrence.dateKey, occurrence.time)
+                    : undefined
+                }
                 onSplit={task.type === 'once' ? (occurrence) => onSplit(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
                 onMerge={task.type === 'once' ? (occurrence) => onMerge(occurrence.id, occurrence.dateKey, occurrence.time) : undefined}
                 mergeDisabled={task.sameDayCount <= 1}

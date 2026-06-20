@@ -180,14 +180,6 @@
   color: #2b6e2b;
 }
 
-.task-list__detail,
-.task-list__duration {
-  font-size: 12px;
-  color: #6b6b76;
-  min-width: 0;
-  word-break: break-word;
-}
-
 .task-list__meta {
   display: flex;
   flex-wrap: wrap;
@@ -305,6 +297,8 @@
   font-size: 14px;
   white-space: normal;
   word-break: break-word;
+  flex: 1;
+  min-width: 60px;
 }
 
 .task-list__edit {
