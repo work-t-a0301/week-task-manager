@@ -3,17 +3,41 @@ import './TaskItem.css'
 const RECURRENCE_BADGES = { daily: '毎日', weekly: '週1' }
 const STATUS_MODIFIERS = { 順調: 'ontrack', 遅延: 'late', 前倒し: 'ahead' }
 
-export default function TaskItem({ task, onToggle, onProgressChange, onDelete }) {
+export default function TaskItem({ task, draggable, onDragStart, onToggle, onProgressChange, onDurationChange, onDelete }) {
   const badge = RECURRENCE_BADGES[task.type]
 
   return (
-    <li className={`task-item${task.completed ? ' task-item--completed' : ''}`}>
+    <li
+      className={`task-item${task.completed ? ' task-item--completed' : ''}${draggable ? ' task-item--draggable' : ''}`}
+      draggable={draggable}
+      onDragStart={draggable ? (event) => onDragStart(event, task) : undefined}
+    >
       <div className="task-item__row">
         <label className="task-item__checkbox">
+          {draggable && (
+            <span className="task-item__drag-handle" aria-hidden="true" title="ドラッグで移動">
+              ⠿
+            </span>
+          )}
           <input type="checkbox" checked={task.completed} onChange={() => onToggle(task)} aria-label="完了" />
           {badge && <span className="task-item__badge">{badge}</span>}
           {task.time && <span className="task-item__time">{task.time}</span>}
-          <span className="task-item__duration">作業時間 {task.duration}</span>
+          {task.type === 'once' ? (
+            <input
+              type="time"
+              className="task-item__duration-input"
+              value={task.duration}
+              onChange={(event) => onDurationChange(task, event.target.value)}
+              aria-label="この日の作業時間"
+            />
+          ) : (
+            <span className="task-item__duration">作業時間 {task.duration}</span>
+          )}
+          {task.segmentTotal > 1 && (
+            <span className="task-item__split-badge">
+              {task.segmentIndex}/{task.segmentTotal}日目
+            </span>
+          )}
           {task.status && (
             <span className={`task-item__status task-item__status--${STATUS_MODIFIERS[task.status]}`}>
               {task.status}

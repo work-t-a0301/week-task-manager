@@ -35,9 +35,16 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
     setType(task.type)
     setDuration(task.duration)
     setTitle(task.title)
-    setWeekday(task.weekday ?? 0)
+    setWeekday(task.weekday ?? schedule.workDays[0] ?? 0)
     setDeadline(task.deadline ?? '')
     setError('')
+  }
+
+  function handleTypeChange(nextType) {
+    setType(nextType)
+    if (nextType === 'weekly' && !schedule.workDays.includes(weekday)) {
+      setWeekday(Math.min(...schedule.workDays))
+    }
   }
 
   function handleSubmit(event) {
@@ -100,7 +107,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                   value={option.value}
                   checked={type === option.value}
                   disabled={editingId !== null}
-                  onChange={() => setType(option.value)}
+                  onChange={() => handleTypeChange(option.value)}
                 />
                 {option.label}
               </label>
@@ -109,19 +116,23 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
 
           {type === 'weekly' && (
             <fieldset className="task-list__radio-group">
-              <legend>曜日</legend>
-              {WEEKDAY_LABELS.map((label, index) => (
-                <label key={label} className="task-list__radio">
-                  <input
-                    type="radio"
-                    name="task-weekday"
-                    value={index}
-                    checked={weekday === index}
-                    onChange={() => setWeekday(index)}
-                  />
-                  {label}
-                </label>
-              ))}
+              <legend>曜日（休日は選択不可）</legend>
+              {WEEKDAY_LABELS.map((label, index) => {
+                const isHoliday = !schedule.workDays.includes(index)
+                return (
+                  <label key={label} className={`task-list__radio${isHoliday ? ' task-list__radio--disabled' : ''}`}>
+                    <input
+                      type="radio"
+                      name="task-weekday"
+                      value={index}
+                      checked={weekday === index}
+                      disabled={isHoliday}
+                      onChange={() => setWeekday(index)}
+                    />
+                    {label}
+                  </label>
+                )
+              })}
             </fieldset>
           )}
 
@@ -176,7 +187,7 @@ export default function TaskList({ tasks, schedule, onAddTask, onUpdateTask, onD
                 <h4>{TYPE_LABELS[groupType]}</h4>
                 {groupType === 'once' && (
                   <button type="button" className="task-list__schedule-button" onClick={handleScheduleClick}>
-                    カレンダーに設定
+                    カレンダーに自動設定
                   </button>
                 )}
               </div>

@@ -1,10 +1,10 @@
 .day-column {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
-  padding: 10px;
-  border-radius: 14px;
+  padding: 8px;
+  border-radius: 12px;
   background: #fff;
   border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.06);
@@ -20,41 +20,51 @@
   opacity: 0.6;
 }
 
+.day-column--drag-over {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
+}
+
 .day-column__header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 60px;
+  gap: 1px;
+  width: 48px;
   flex-shrink: 0;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 .day-column__off-badge {
-  font-size: 11px;
-  padding: 2px 7px;
+  font-size: 10px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: #e0e0e6;
   color: #6b6b76;
 }
 
 .day-column__remaining {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: var(--today-bg);
   color: var(--accent);
   white-space: nowrap;
 }
 
+.day-column__remaining--over {
+  background: #ffe3e3;
+  color: #c92a2a;
+}
+
 .day-column__weekday {
-  font-size: 13px;
+  font-size: 11px;
   color: #6b6b76;
 }
 
 .day-column__date {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--accent);
 }
@@ -70,6 +80,6 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 32px;
+  gap: 4px;
+  min-height: 24px;
 }

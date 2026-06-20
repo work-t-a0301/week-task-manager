@@ -32,6 +32,11 @@ export function toDateKey(date) {
   return `${year}-${month}-${day}`
 }
 
+function dateFromKey(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 function timeToMinutes(time) {
   const [hours, minutes] = (time || '00:00').split(':').map(Number)
   return hours * 60 + minutes
@@ -59,14 +64,26 @@ function weekdayIndexOf(date) {
 }
 
 // 指定日にその日働く分(=出現する)タスクを、その日の作業時間とともに返す。
-// 毎日タスク・週1タスクは特定の時刻を持たない（time が undefined のまま)
-function tasksOccurringOnDate(date, dateKey, tasks) {
+// 毎日タスク・週1タスクは休日には出現せず、特定の時刻も持たない（time が undefined のまま）
+function tasksOccurringOnDate(date, dateKey, tasks, schedule) {
   const weekdayIndex = weekdayIndexOf(date)
+  const isWorkDay = schedule.workDays.includes(weekdayIndex)
   return tasks.flatMap((task) => {
-    if (task.type === 'daily') return [task]
-    if (task.type === 'weekly') return task.weekday === weekdayIndex ? [task] : []
-    const segment = (task.segments || []).find((s) => s.date === dateKey)
-    return segment ? [{ ...task, time: segment.time, duration: segment.duration }] : []
+    if (task.type === 'daily') return isWorkDay ? [task] : []
+    if (task.type === 'weekly') return isWorkDay && task.weekday === weekdayIndex ? [task] : []
+    const segments = task.segments || []
+    const segment = segments.find((s) => s.date === dateKey)
+    if (!segment) return []
+    const sortedDates = segments.map((s) => s.date).sort()
+    return [
+      {
+        ...task,
+        time: segment.time,
+        duration: segment.duration,
+        segmentIndex: sortedDates.indexOf(dateKey) + 1,
+        segmentTotal: sortedDates.length,
+      },
+    ]
   })
 }
 
@@ -156,7 +173,7 @@ export function useWeekTasks() {
   }, [weekOffset])
 
   function occurrencesForDate(date, dateKey, schedule) {
-    return tasksOccurringOnDate(date, dateKey, tasks)
+    return tasksOccurringOnDate(date, dateKey, tasks, schedule)
       .map((task) => {
         const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
         return { ...occurrence, status: computeStatus(date, dateKey, occurrence, schedule) }
@@ -164,15 +181,16 @@ export function useWeekTasks() {
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
   }
 
+  // 休日には残り時間の概念がないので null。残業（作業時間が枠を超えた）場合は負の値を返す
   function remainingMinutesForDate(date, dateKey, schedule) {
     const weekdayIndex = weekdayIndexOf(date)
     if (!schedule.workDays.includes(weekdayIndex)) return null
     const totalWorkMinutes = timeToMinutes(schedule.endTime) - timeToMinutes(schedule.startTime)
-    const busyMinutes = tasksOccurringOnDate(date, dateKey, tasks).reduce(
+    const busyMinutes = tasksOccurringOnDate(date, dateKey, tasks, schedule).reduce(
       (sum, task) => sum + durationToMinutes(task.duration),
       0,
     )
-    return Math.max(totalWorkMinutes - busyMinutes, 0)
+    return totalWorkMinutes - busyMinutes
   }
 
   function addTask({ type, title, duration, weekday, deadline }) {
@@ -203,9 +221,27 @@ export function useWeekTasks() {
     )
   }
 
+  // 単発タスクが複数日に分割されている場合、同じタスクの他の日の状態も
+  // 連動させて変更する（完了チェック・進捗は分割タスク全体で共有する）
+  function relatedDateKeys(taskId, dateKey) {
+    const task = tasks.find((t) => t.id === taskId)
+    if (task && task.type === 'once' && (task.segments || []).length > 1) {
+      return task.segments.map((s) => s.date)
+    }
+    return [dateKey]
+  }
+
   function updateOccurrence(taskId, dateKey, updater) {
-    const key = `${taskId}:${dateKey}`
-    setOccurrenceStates((prev) => ({ ...prev, [key]: updater(normalizeOccurrence(prev[key])) }))
+    const dateKeys = relatedDateKeys(taskId, dateKey)
+    setOccurrenceStates((prev) => {
+      const current = normalizeOccurrence(prev[`${taskId}:${dateKey}`])
+      const nextState = updater(current)
+      const next = { ...prev }
+      for (const dk of dateKeys) {
+        next[`${taskId}:${dk}`] = nextState
+      }
+      return next
+    })
   }
 
   function toggleCompletion(taskId, dateKey) {
@@ -217,6 +253,47 @@ export function useWeekTasks() {
 
   function setProgress(taskId, dateKey, progress) {
     updateOccurrence(taskId, dateKey, () => ({ progress, completed: progress === 100 }))
+  }
+
+  // 単発タスクの、その日に割り当てられた作業時間（セグメント）だけを変更する
+  function updateSegmentDuration(taskId, dateKey, duration) {
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId || task.type !== 'once') return task
+        return {
+          ...task,
+          segments: (task.segments || []).map((s) => (s.date === dateKey ? { ...s, duration } : s)),
+        }
+      }),
+    )
+  }
+
+  // カレンダー上でのドラッグ移動。週1タスクは曜日（=以降すべての週）を変更し、
+  // 単発タスクはそのセグメントの日付だけを変更する（時刻はそのまま）
+  function moveTask(taskId, fromDateKey, toDateKey) {
+    if (fromDateKey === toDateKey) return
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId) return task
+        if (task.type === 'weekly') {
+          return { ...task, weekday: weekdayIndexOf(dateFromKey(toDateKey)) }
+        }
+        if (task.type === 'once') {
+          const segments = task.segments || []
+          if (segments.some((s) => s.date === toDateKey)) return task
+          return { ...task, segments: segments.map((s) => (s.date === fromDateKey ? { ...s, date: toDateKey } : s)) }
+        }
+        return task
+      }),
+    )
+    setOccurrenceStates((prev) => {
+      const fromKey = `${taskId}:${fromDateKey}`
+      if (!(fromKey in prev)) return prev
+      const next = { ...prev }
+      next[`${taskId}:${toDateKey}`] = next[fromKey]
+      delete next[fromKey]
+      return next
+    })
   }
 
   function deleteTask(id) {
@@ -272,7 +349,7 @@ export function useWeekTasks() {
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
 
-        const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working))
+        const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working, schedule))
         const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes)
         const gap = findLargestFreeGap(busy, dayStart, shrunkDayEnd)
         if (!gap) continue
@@ -310,6 +387,8 @@ export function useWeekTasks() {
     updateTask,
     toggleCompletion,
     setProgress,
+    updateSegmentDuration,
+    moveTask,
     deleteTask,
     scheduleUnplacedTasks,
   }

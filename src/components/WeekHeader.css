@@ -2,14 +2,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
 }
 
 .week-header button {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 5px 10px;
   border: none;
   border-radius: 999px;
   background: #fff;
@@ -25,9 +25,9 @@
 }
 
 .week-header__range {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
-  min-width: 120px;
+  min-width: 100px;
   text-align: center;
   color: var(--accent);
 }

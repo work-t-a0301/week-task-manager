@@ -1,9 +1,9 @@
 .task-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  gap: 3px;
+  padding: 5px 7px;
+  border-radius: 8px;
   background: #fff;
   border: 1px solid var(--border);
   box-shadow: 0 1px 4px rgba(124, 58, 237, 0.06);
@@ -12,6 +12,23 @@
 .task-item--completed .task-item__title {
   color: #9a9aa3;
   text-decoration: line-through;
+}
+
+.task-item--draggable {
+  border-style: dashed;
+  border-color: var(--accent-2);
+  cursor: grab;
+}
+
+.task-item--draggable:active {
+  cursor: grabbing;
+}
+
+.task-item__drag-handle {
+  color: var(--accent-2);
+  font-size: 13px;
+  cursor: grab;
+  flex-shrink: 0;
 }
 
 .task-item__row {
@@ -69,6 +86,25 @@
   color: #4338ca;
 }
 
+.task-item__split-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fff3bf;
+  color: #997404;
+  flex-shrink: 0;
+}
+
+.task-item__duration-input {
+  font-size: 12px;
+  color: #6b6b76;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+}
+
 .task-item__title {
   margin: 0;
   font-size: 14px;
@@ -93,7 +129,7 @@
 .task-item__progress {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .task-item__progress-slider {

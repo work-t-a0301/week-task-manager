@@ -20,6 +20,8 @@ function App() {
     updateTask,
     toggleCompletion,
     setProgress,
+    updateSegmentDuration,
+    moveTask,
     deleteTask,
     scheduleUnplacedTasks,
   } = useWeekTasks()
@@ -62,12 +64,15 @@ function App() {
                 <DayColumn
                   key={dateKey}
                   date={date}
+                  dateKey={dateKey}
                   tasks={occurrencesForDate(date, dateKey, schedule)}
                   isWorkDay={schedule.workDays.includes(weekdayIndex)}
                   remainingMinutes={remainingMinutesForDate(date, dateKey, schedule)}
                   onToggle={toggleCompletion}
                   onProgressChange={setProgress}
+                  onDurationChange={updateSegmentDuration}
                   onDelete={deleteTask}
+                  onMoveTask={moveTask}
                 />
               )
             })}
