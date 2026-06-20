@@ -1,4 +1,4 @@
-import { formatMonthDay, formatDeadlineLabel } from '../hooks/useWeekTasks'
+import { formatMonthDay, formatDeadlineLabel, minutesToTime } from '../hooks/useWeekTasks'
 import './TaskItem.css'
 
 const RECURRENCE_BADGES = { daily: '毎日', weekly: '週1' }
@@ -80,6 +80,13 @@ export default function TaskItem({
           <span className="task-item__meta-chip">
             <span className="task-item__meta-label">作業時間</span>
             {task.duration}
+          </span>
+        )}
+        {task.type === 'once' && task.scheduledDiffMinutes !== 0 && (
+          <span className={`task-item__meta-chip${task.scheduledDiffMinutes < 0 ? ' task-item__meta-chip--over' : ''}`}>
+            <span className="task-item__meta-label">差分</span>
+            {task.scheduledDiffMinutes < 0 ? '超過 ' : '残り '}
+            {minutesToTime(Math.abs(task.scheduledDiffMinutes))}
           </span>
         )}
         {task.type === 'once' && task.startDate && (

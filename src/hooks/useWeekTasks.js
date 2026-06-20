@@ -56,7 +56,7 @@ function timeToMinutes(time) {
   return hours * 60 + minutes
 }
 
-function minutesToTime(minutes) {
+export function minutesToTime(minutes) {
   const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
   const mins = (minutes % 60).toString().padStart(2, '0')
   return `${hours}:${mins}`
@@ -218,7 +218,19 @@ export function useWeekTasks() {
         const occurrence = { ...task, dateKey, ...normalizeOccurrence(occurrenceStates[`${task.id}:${dateKey}`]) }
         const exceedsDeadline =
           occurrence.type === 'once' ? taskExceedsDeadline(occurrence.segments, occurrence.deadline) : false
-        return { ...occurrence, exceedsDeadline, status: computeStatus(date, dateKey, occurrence, schedule) }
+        // 全作業時間とカレンダーに設定済みのセグメント合計との差分（正なら未設定分が残っている、
+        // 負ならその逆に全作業時間を超えて設定されている）
+        const scheduledDiffMinutes =
+          occurrence.type === 'once'
+            ? durationToMinutes(occurrence.totalDuration) -
+              (occurrence.segments || []).reduce((sum, s) => sum + durationToMinutes(s.duration), 0)
+            : null
+        return {
+          ...occurrence,
+          exceedsDeadline,
+          scheduledDiffMinutes,
+          status: computeStatus(date, dateKey, occurrence, schedule),
+        }
       })
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
   }
@@ -470,22 +482,24 @@ export function useWeekTasks() {
         if (!schedule.workDays.includes(weekdayIndex)) continue
 
         const dateKey = toDateKey(cursor)
-        const currentSegments = working.find((t) => t.id === task.id).segments || []
-        if (currentSegments.some((s) => s.date === dateKey)) continue
-
         const isDeadlineDay = dateKey === toDateKey(deadlineDate)
         const effectiveDayEnd = isDeadlineDay ? Math.min(dayEnd, timeToMinutes(formatTimeOfDay(deadlineDate))) : dayEnd
 
-        const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working, schedule))
-        const allBusy = breakInterval ? [...busy, breakInterval] : busy
-        const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes)
-        const gap = findLargestFreeGap(allBusy, dayStart, shrunkDayEnd)
-        if (!gap) continue
+        // 休憩や他タスクで空き時間が複数の枠に分かれている場合でも、その日の空きを
+        // 使い切るまで（既にこのタスクのセグメントがあっても）同じ日に積めるだけ積む
+        while (remaining > 0) {
+          const currentSegments = working.find((t) => t.id === task.id).segments || []
+          const { busy, flatMinutes } = splitOccurringTasks(tasksOccurringOnDate(cursor, dateKey, working, schedule))
+          const allBusy = breakInterval ? [...busy, breakInterval] : busy
+          const shrunkDayEnd = Math.max(dayStart, effectiveDayEnd - flatMinutes)
+          const gap = findLargestFreeGap(allBusy, dayStart, shrunkDayEnd)
+          if (!gap) break
 
-        const allocated = Math.min(gap.size, remaining)
-        const newSegment = { date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) }
-        remaining -= allocated
-        working = working.map((t) => (t.id === task.id ? { ...t, segments: [...currentSegments, newSegment] } : t))
+          const allocated = Math.min(gap.size, remaining)
+          const newSegment = { date: dateKey, time: minutesToTime(gap.start), duration: minutesToTime(allocated) }
+          remaining -= allocated
+          working = working.map((t) => (t.id === task.id ? { ...t, segments: [...currentSegments, newSegment] } : t))
+        }
       }
 
       if (remaining > 0) {

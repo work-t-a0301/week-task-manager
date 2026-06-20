@@ -157,6 +157,15 @@
   flex-shrink: 0;
 }
 
+.task-item__meta-chip--over {
+  background: #ffe3e3;
+  color: #c92a2a;
+}
+
+.task-item__meta-chip--over .task-item__meta-label {
+  color: #c92a2a;
+}
+
 .task-item__title {
   margin: 0;
   font-size: 14px;
